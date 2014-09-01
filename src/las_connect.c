@@ -81,7 +81,8 @@ static int alloc_lua( lua_State *L )
         {
             as_error err;
             
-            if( aerospike_connect( conn->as, &err ) == AEROSPIKE_OK ){
+            conn->connected = aerospike_connect( conn->as, &err );
+            if( conn->connected == AEROSPIKE_OK ){
                 lstate_setmetatable( L, LAS_CONNECT_MT );
                 return 1;
             }
@@ -104,7 +105,14 @@ static int alloc_lua( lua_State *L )
 
 static int gc_lua( lua_State *L )
 {
-    aerospike_destroy( ((las_conn_t*)lua_touserdata( L, 1 ))->as );
+    las_conn_t *conn = (las_conn_t*)lua_touserdata( L, 1 );
+
+    if( conn->connected == AEROSPIKE_OK ){
+        as_error err;
+        aerospike_close( conn->as, &err );
+    }
+    aerospike_destroy( conn->as );
+    
     return 0;
 }
 

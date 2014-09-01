@@ -38,6 +38,7 @@
 
 typedef struct {
     aerospike *as;
+    as_status connected;
 } las_conn_t;
 
 
