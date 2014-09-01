@@ -83,7 +83,7 @@ static inline int las_key_init( lua_State *L, las_key_t *lkey, int nbins,
 #define las_key_write_init(L,lkey)      las_key_init_prepare(L,lkey,-1,write)
 #define las_key_read_init(L,lkey)       las_key_init_prepare(L,lkey,0,read)
 #define las_key_remove_init(L,lkey)     las_key_init_prepare(L,lkey,0,remove)
-#define las_key_operate_init(L,lkey)    las_key_init_prepare(L,lkey,0,operate)
+#define las_key_operate_init(L,lkey)    las_key_init_prepare(L,lkey,-1,operate)
 
 #define las_key_dispose( lkey ) do { \
     as_record_destroy( (lkey)->rec ); \
