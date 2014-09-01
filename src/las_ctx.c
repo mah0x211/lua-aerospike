@@ -29,7 +29,7 @@
 
 #include "las_ctx.h"
 #include "las_record.h"
-
+#include "las_ops.h"
 
 static inline las_ctx_t *get_context( lua_State *L, las_conn_t **conn )
 {
@@ -83,6 +83,7 @@ static inline int las_key_init( lua_State *L, las_key_t *lkey, int nbins,
 #define las_key_write_init(L,lkey)      las_key_init_prepare(L,lkey,-1,write)
 #define las_key_read_init(L,lkey)       las_key_init_prepare(L,lkey,0,read)
 #define las_key_remove_init(L,lkey)     las_key_init_prepare(L,lkey,0,remove)
+#define las_key_operate_init(L,lkey)    las_key_init_prepare(L,lkey,0,operate)
 
 #define las_key_dispose( lkey ) do { \
     as_record_destroy( (lkey)->rec ); \
@@ -291,6 +292,51 @@ static int remove_lua( lua_State *L )
     las_key_dispose( &lkey );
     
 	return rv;
+}
+
+
+static int operate_lua( lua_State *L )
+{
+    int rv = 1;
+    las_key_t lkey;
+    as_error err;
+    las_ops_t *lops = luaL_checkudata( L, 3, LAS_OPERATION_MT );
+	as_operations ops;
+    
+    if( las_key_operate_init( L, &lkey ) != 0 ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+    else if( !las_ops2asops( L, lops, &ops ) ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        rv++;
+    }
+    else
+    {
+        switch( aerospike_key_operate( lkey.as, &err, lkey.policy, lkey.key, &ops,
+                                       &lkey.rec ) ){
+            case AEROSPIKE_OK:
+                lua_createtable( L, 0, 3 );
+                lstate_num2tbl( L, "ttl", lkey.rec->ttl );
+                lstate_num2tbl( L, "gen", lkey.rec->gen );
+                lua_pushstring( L, "bins" );
+                lstate_asrec2tbl( L, lkey.rec );
+                lua_rawset( L, -3 );
+            break;
+            
+            default:
+                lua_pushnil( L );
+                lua_pushstring( L, err.message );
+                rv++;
+        }
+        as_operations_destroy( &ops );
+    }
+    
+    las_key_dispose( &lkey );
+
+    return rv;
 }
 
 
@@ -840,6 +886,7 @@ int las_ctx_init( lua_State *L )
         { "select", select_lua },
         { "exists", exists_lua },
         { "remove", remove_lua },
+        { "operate", operate_lua },
         // batch ops
         { "batchGet", batchget_lua },
         { "batchExists", batchexists_lua },
@@ -852,12 +899,8 @@ int las_ctx_init( lua_State *L )
         // index ops
         { "indexCreate", indexcreate_lua },
         { "indexRemove", indexremove_lua },
-        
         /* not yet implemented
-        // advanced ops
-        { "operate", operate_lua },
         { "apply", apply_lua },
-        { "incr", incr_lua },
         // query ops
         { "query", query_lua },
         // UDF ops

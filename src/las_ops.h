@@ -34,11 +34,24 @@
 #include "las.h"
 
 typedef struct {
-    as_binop *bops;
-    uint16_t nbops;
+    as_operator op;
+    char name[AS_BIN_NAME_MAX_SIZE];
+    int type;
+    union {
+        lua_Integer ival;
+        int refval;
+    } arg;
+} las_ops_binop_t;
+
+typedef struct {
+    las_ops_binop_t *bops;
+    uint16_t nalloc;
+    uint16_t nops;
 } las_ops_t;
 
-int luaopen_aerospike_operate( lua_State *L );
+LUALIB_API int luaopen_aerospike_operation( lua_State *L );
+
+as_operations *las_ops2asops( lua_State *L, las_ops_t *ops, as_operations *asops );
 
 
 #endif

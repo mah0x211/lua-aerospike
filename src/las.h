@@ -64,12 +64,11 @@
 #include <aerospike/as_bin.h>
 
 
-
 // define module names
-#define LAS_CONNECT_MT  "aerospike.connect"
-#define LAS_CONTEXT_MT  "aerospike.context"
-#define LAS_OPERATE_MT  "aerospike.operate"
-#define LAS_RECORD_MT   "aerospike.record"
+#define LAS_CONNECT_MT      "aerospike.connect"
+#define LAS_CONTEXT_MT      "aerospike.context"
+#define LAS_OPERATION_MT    "aerospike.operation"
+#define LAS_RECORD_MT       "aerospike.record"
 
 #include "las_util.h"
 

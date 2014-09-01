@@ -30,6 +30,7 @@
 #include "las.h"
 #include "las_connect.h"
 #include "las_ctx.h"
+#include "las_ops.h"
 #include "las_record.h"
 
 LUALIB_API int luaopen_aerospike( lua_State *L )
@@ -43,8 +44,8 @@ LUALIB_API int luaopen_aerospike( lua_State *L )
     luaopen_aerospike_connect( L );
     lua_setfield( L, -2, "open" );
     // operation
-    //luaopen_aerospike_operate( L );
-    //lua_setfield( L, -2, "operate" );
+    luaopen_aerospike_operation( L );
+    lua_setfield( L, -2, "operation" );
     // record
     //luaopen_aerospike_record( L );
     //lua_setfield( L, -2, "record" );
