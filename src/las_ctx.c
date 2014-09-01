@@ -716,7 +716,7 @@ static bool infoeach_cb( const as_error *err, const as_node *node,
         lstate_str2tbl( L, "err", err->message );
     }
     lstate_str2tbl( L, "host", host->name );
-    lstate_num2tbl( L, "port", NTOHS( host->addr.sin_port ) );
+    lstate_num2tbl( L, "port", ntohs( host->addr.sin_port ) );
     lua_rawseti( L, -2, info->nitem++ );
     
     return true;
@@ -809,6 +809,7 @@ static int indexremove_lua( lua_State *L )
 }
 
 
+
 int las_ctx_alloc_lua( lua_State *L )
 {
     las_ctx_t *ctx = NULL;
@@ -821,7 +822,9 @@ int las_ctx_alloc_lua( lua_State *L )
     
     // check arguments
     luaL_checkudata( L, 1, LAS_CONNECT_MT );
+    // check namespace
     ns = lstate_checklstring( L, 2, &ns_len );
+    // check setname
     nsset = lstate_checklstring( L, 3, &nsset_len );
     if( ns_len >= AS_NAMESPACE_MAX_SIZE ){
         lua_pushnil( L );
