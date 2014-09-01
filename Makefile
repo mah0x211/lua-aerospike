@@ -8,7 +8,7 @@ all: $(TARGET)
 	$(CC) $(CFLAGS) $(WARNINGS) $(CPPFLAGS) -o $@ -c $<
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(PLATFORM_LDFLAGS)
 
 install:
 	mkdir -p $(LIBDIR)

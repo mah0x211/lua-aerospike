@@ -19,6 +19,13 @@ external_dependencies = {
     }
 }
 build = {
+    platforms = {
+        linux = {
+            build_variables = {
+                PLATFORM_LDFLAGS = "-lrt"
+            }
+        }
+    },
     type = "make",
     build_variables = {
         PACKAGE         = "aerospike",
