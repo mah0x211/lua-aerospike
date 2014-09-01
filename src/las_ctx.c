@@ -60,8 +60,9 @@ static inline int las_key_init( lua_State *L, las_key_t *lkey, int nbins,
     if( !( lkey->key = as_key_new( ctx->ns, ctx->set, pk ) ) ){
         return -1;
     }
-    else if( nbins < 0 ){
-        memset( (void*)lkey->rec, 0, sizeof( as_record ) );
+    // init record
+    if( nbins < 0 ){
+        lkey->rec = NULL;
     }
     else if( !( lkey->rec = as_record_new( (uint16_t)nbins ) ) ){
         as_key_destroy( lkey->key );
