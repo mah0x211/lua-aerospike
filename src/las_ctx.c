@@ -285,7 +285,7 @@ static int remove_lua( lua_State *L )
             lua_pushboolean( L, 0 );
         break;
         default:
-            lua_pushnil( L );
+            lua_pushboolean( L, 0 );
             lua_pushstring( L, err.message );
             rv++;
     }
