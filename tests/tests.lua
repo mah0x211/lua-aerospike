@@ -22,6 +22,7 @@ local TESTS = {
     'get',
     'select',
     'exists',
+    'operate',
     'batchGet',
     'batchExists',
     'scanEach',

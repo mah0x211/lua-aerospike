@@ -22,6 +22,22 @@ return {
         NAME = 'index_c',
         BIN = 'c'
     },
+    OPEARATE = {
+        a = {
+            append = 'append str'
+        },
+        b = {
+            prepend = 'prepend str'
+        },
+        c = {
+            incr = 1900
+        },
+        map = {
+            write = {
+                hello = 'world'
+            }
+        }
+    },
     DATA = {
         a = 'a',
         b = 'b',
