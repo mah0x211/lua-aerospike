@@ -143,7 +143,7 @@ static int put_lua( lua_State *L )
     }
     las_key_dispose( &lkey );
     
-	return rv;
+    return rv;
 }
 
 
@@ -152,7 +152,7 @@ static int get_lua( lua_State *L )
     int rv = 1;
     las_key_t lkey;
     as_error err;
-	
+    
     if( las_key_read_init( L, &lkey ) != 0 ){
         lua_pushnil( L );
         lua_pushstring( L, strerror( errno ) );
@@ -176,7 +176,7 @@ static int get_lua( lua_State *L )
     }
     las_key_dispose( &lkey );
     
-	return rv;
+    return rv;
 }
 
 
@@ -233,7 +233,7 @@ static int select_lua( lua_State *L )
     las_key_dispose( &lkey );
     pdealloc( bins );
     
-	return rv;
+    return rv;
 }
 
 
@@ -242,7 +242,7 @@ static int exists_lua( lua_State *L )
     int rv = 1;
     las_key_t lkey;
     as_error err;
-	
+    
     if( las_key_read_init( L, &lkey ) != 0 ){
         lua_pushboolean( L, 0 );
         lua_pushstring( L, strerror( errno ) );
@@ -262,7 +262,7 @@ static int exists_lua( lua_State *L )
     }
     las_key_dispose( &lkey );
     
-	return rv;
+    return rv;
 }
 
 
@@ -271,7 +271,7 @@ static int remove_lua( lua_State *L )
     int rv = 1;
     las_key_t lkey;
     as_error err;
-	
+    
     if( las_key_remove_init( L, &lkey ) != 0 ){
         lua_pushboolean( L, 0 );
         lua_pushstring( L, strerror( errno ) );
@@ -291,7 +291,7 @@ static int remove_lua( lua_State *L )
     }
     las_key_dispose( &lkey );
     
-	return rv;
+    return rv;
 }
 
 
@@ -301,7 +301,7 @@ static int operate_lua( lua_State *L )
     las_key_t lkey;
     as_error err;
     las_ops_t *lops = luaL_checkudata( L, 3, LAS_OPERATION_MT );
-	as_operations ops;
+    as_operations ops;
     
     if( las_key_operate_init( L, &lkey ) != 0 ){
         lua_pushnil( L );
@@ -452,7 +452,7 @@ static int batchget_lua( lua_State *L )
     }
     as_batch_destroy( &lbatch.batch );
     
-	return rv;
+    return rv;
 }
 
 
@@ -477,7 +477,7 @@ static int batchexists_lua( lua_State *L )
     }
     as_batch_destroy( &lbatch.batch );
     
-	return rv;
+    return rv;
 }
 
 
@@ -584,7 +584,7 @@ static int scaneach_lua( lua_State *L )
     }
     as_scan_destroy( &seach.scan );
     
-	return rv;
+    return rv;
 }
 
 

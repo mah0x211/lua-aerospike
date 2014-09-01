@@ -41,7 +41,7 @@ static int close_lua( lua_State *L )
 {
     int rv = 1;
     las_conn_t *conn = luaL_checkudata( L, 1, LAS_CONNECT_MT );
-	as_error err;
+    as_error err;
     
     if( aerospike_close( conn->as, &err ) == AEROSPIKE_OK ){
         conn->connected = 0;
