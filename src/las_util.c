@@ -336,6 +336,7 @@ static void set_asmap2tbl( lua_State *L, as_hashmap *map )
         set_kval2lua( L, as_string_get( (const as_string*)as_pair_1( val ) ),
                       as_pair_2( val ) );
     }
+    as_hashmap_iterator_destroy( &it );
 }
 
 static void set_asarr2tbl( lua_State *L, as_arraylist *arr )
@@ -350,6 +351,7 @@ static void set_asarr2tbl( lua_State *L, as_arraylist *arr )
         val = (as_val*)as_arraylist_iterator_next( &it );
         set_ival2lua( L, i++, val );
     }
+    as_arraylist_iterator_destroy( &it );
 }
 
 
@@ -429,6 +431,7 @@ uint16_t lstate_asrec2tbl( lua_State *L, as_record *rec )
             bin = as_record_iterator_next( &it );
             set_kval2lua( L, as_bin_get_name( bin ), (as_val*)as_bin_get_value( bin ) );
         }
+        as_record_iterator_destroy( &it );
     }
     
     return nbin;
