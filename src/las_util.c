@@ -91,9 +91,6 @@ CHECK_REMAIN:
 
 
 // MARK: convert lua table to as_record
-
-static as_val *tbl2asval( lua_State *L );
-
 static as_val *set_tbl2asmap( lua_State *L, const uint32_t len )
 {
     as_map *map = (as_map*)as_hashmap_new( len );
@@ -121,7 +118,7 @@ static as_val *set_tbl2asmap( lua_State *L, const uint32_t len )
                     rc = as_stringmap_set_int64( map, name, lua_toboolean( L, -1 ) );
                 break;
                 case LUA_TTABLE:
-                    if( !( val = tbl2asval( L ) ) ){
+                    if( !( val = lstate_tbl2asval( L ) ) ){
                         as_map_destroy( map );
                         return NULL;
                     }
@@ -179,7 +176,7 @@ static as_val *set_tbl2asarr( lua_State *L, const uint32_t len )
                     rc = as_arraylist_set_int64( list, idx, lua_toboolean( L, -1 ) );
                 break;
                 case LUA_TTABLE:
-                    if( !( val = tbl2asval( L ) ) ){
+                    if( !( val = lstate_tbl2asval( L ) ) ){
                         as_arraylist_destroy( list );
                         return NULL;
                     }
@@ -220,7 +217,7 @@ static as_val *set_tbl2asarr( lua_State *L, const uint32_t len )
 }
 
 
-static as_val *tbl2asval( lua_State *L )
+as_val *lstate_tbl2asval( lua_State *L )
 {
     size_t len = 0;
     int type = lstate_tablelen( L, &len );
@@ -292,7 +289,7 @@ bool lstate_tbl2asrec( lua_State *L, as_record *rec )
                 rv = as_record_set_str( rec, name, lua_tostring( L, -1 ) );
             break;
             case LUA_TTABLE:
-                if( !( bin = (as_bin_value*)tbl2asval( L ) ) ){
+                if( !( bin = (as_bin_value*)lstate_tbl2asval( L ) ) ){
                     return false;
                 }
                 rv = as_record_set( rec, name, bin );
