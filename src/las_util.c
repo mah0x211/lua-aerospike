@@ -239,30 +239,31 @@ as_val *lstate_tbl2asval( lua_State *L )
 
 
 // 1 = las_ctx_t, 2 = key string, 3 = record table, 4 = ttl
-bool lstate_tbl2asrec( lua_State *L, as_record *rec )
+as_record *lstate_tbl2asrec( lua_State *L )
 {
     bool rv = true;
     size_t len = 0;
     as_bin_value *bin = NULL;
     const char *name = NULL;
+    as_record *rec = NULL;
     
     // check table
     if( lstate_tablelen( L, &len ) != LUA_TTABLE_HASH ){
         lua_pushboolean( L, 0 );
         lua_pushfstring( L, "record must be hash table" );
-        return false;
+        return NULL;
     }
     // number of bin limit exceeded
     else if( len >= UINT16_MAX ){
         lua_pushboolean( L, 0 );
         lua_pushfstring( L, "number of bin limit(%d) exceeded", UINT16_MAX );
-        return false;
+        return NULL;
     }
     // allocate record
-    else if( !as_record_init( rec, (uint16_t)len ) ){
+    else if( !( rec = as_record_new( (uint16_t)len ) ) ){
         lua_pushboolean( L, 0 );
         lua_pushstring( L, strerror( errno ) );
-        return false;
+        return NULL;
     }
     
     // push space
@@ -275,7 +276,8 @@ bool lstate_tbl2asrec( lua_State *L, as_record *rec )
         if( !len || len > AS_BIN_NAME_MAX_LEN ){
             lua_pushboolean( L, 0 );
             lua_pushfstring( L, "bin name length must be 1-%d", AS_BIN_NAME_MAX_LEN );
-            return false;
+            as_record_destroy( rec );
+            return NULL;
         }
         
         switch( lua_type( L, -1 ) ){
@@ -290,7 +292,8 @@ bool lstate_tbl2asrec( lua_State *L, as_record *rec )
             break;
             case LUA_TTABLE:
                 if( !( bin = (as_bin_value*)lstate_tbl2asval( L ) ) ){
-                    return false;
+                    as_record_destroy( rec );
+                    return NULL;
                 }
                 rv = as_record_set( rec, name, bin );
             break;
@@ -299,7 +302,8 @@ bool lstate_tbl2asrec( lua_State *L, as_record *rec )
                 lua_pushboolean( L, 0 );
                 lua_pushfstring( L, "%s = <%s> is unsupported data type",
                                  name, lua_typename( L , lua_type( L, -1 ) ) );
-                return false;
+                as_record_destroy( rec );
+                return NULL;
         }
         lua_pop( L, 1 );
     }
@@ -308,9 +312,11 @@ bool lstate_tbl2asrec( lua_State *L, as_record *rec )
     if( !rv ){
         lua_pushboolean( L, 0 );
         lua_pushstring( L, strerror( errno ) );
+        as_record_destroy( rec );
+        return NULL;
     }
-    
-    return rv;
+
+    return rec;
 }
 
 

@@ -221,7 +221,7 @@ static inline int lstate_tablelen( lua_State *L, size_t *len )
 }
 
 
-bool lstate_tbl2asrec( lua_State *L, as_record *rec );
+as_record *lstate_tbl2asrec( lua_State *L );
 as_val *lstate_tbl2asval( lua_State *L );
 uint16_t lstate_asrec2tbl( lua_State *L, as_record *rec );
 

@@ -123,7 +123,7 @@ static int put_lua( lua_State *L )
     }
     
     // read table
-    if( !lstate_tbl2asrec( L, lkey.rec ) ){
+    if( !( lkey.rec = lstate_tbl2asrec( L ) ) ){
         las_key_dispose( &lkey );
         return 2;
     }
