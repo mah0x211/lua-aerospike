@@ -58,27 +58,42 @@ static int close_lua( lua_State *L )
 
 static int alloc_lua( lua_State *L )
 {
-    int argc = lua_gettop( L );
-    las_conn_t *conn = NULL;
-    const char *host = LAS_CONN_DEFAULT_HOST;
-    uint16_t port = LAS_CONN_DEFAULT_PORT;
     as_config cfg;
-    
-    // check argument
-    switch( argc ){
-        case 2:
-            port = (uint16_t)lstate_checkinteger( L, 2 );
-        case 1:
-            host = lstate_checkstring( L, 1 );
-        break;
-    }
-    
+
     // allocate
-    if( as_config_init( &cfg ) &&
-        ( conn = lua_newuserdata( L, sizeof( las_conn_t ) ) ) )
+    if( as_config_init( &cfg ) )
     {
+        int argc = lua_gettop( L );
+        las_conn_t *conn = NULL;
+        const char *host = LAS_CONN_DEFAULT_HOST;
+        uint16_t port = LAS_CONN_DEFAULT_PORT;
+        
+        // check host and port
+        switch( argc ){
+            case 2:
+                port = (uint16_t)lstate_checkinteger( L, 2 );
+            case 1:
+                host = lstate_checkstring( L, 1 );
+            break;
+        }
         as_config_add_host( &cfg, host, port );
-        if( ( conn->as = aerospike_new( &cfg ) ) )
+        
+        // check user and password
+        if( argc > 2 )
+        {
+            const char *user = lstate_checkstring( L, 3 );
+            const char *pswd = lstate_checkstring( L, 4 );
+            // got error
+            if( !as_config_set_user( &cfg, user, pswd ) ){
+                lua_pushnil( L );
+                lua_pushstring( L, strerror( errno ) );
+                return 2;
+            }
+        }
+        
+        // allocate
+        if( ( conn = lua_newuserdata( L, sizeof( las_conn_t ) ) ) &&
+            ( conn->as = aerospike_new( &cfg ) ) )
         {
             as_error err;
             
