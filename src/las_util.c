@@ -285,7 +285,10 @@ as_record *lstate_tbl2asrec( lua_State *L )
                 rv = as_record_set_int64( rec, name, lua_tointeger( L, -1 ) );
             break;
             case LUA_TBOOLEAN:
-                rv = as_record_set_int64( rec, name, lua_toboolean( L, -1 ) );
+                // drop bin if false
+                if( !lua_toboolean( L, -1 ) ){
+                    rv = as_record_set_nil( rec, name );
+                }
             break;
             case LUA_TSTRING:
                 rv = as_record_set_str( rec, name, lua_tostring( L, -1 ) );
