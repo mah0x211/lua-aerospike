@@ -4,6 +4,6 @@ require('./helper');
 local CONTEXT = require('./context');
 
 print( 'scanEach', inspect(assert(
-    CONTEXT:scanEach( unpack( DATA.SELECT ) )
+    CONTEXT:scanEach( nil, unpack( DATA.SELECT ) )
 )));
 
