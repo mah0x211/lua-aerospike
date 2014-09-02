@@ -84,6 +84,7 @@ static inline int las_key_init( lua_State *L, las_key_t *lkey, int nbins,
 #define las_key_read_init(L,lkey)       las_key_init_prepare(L,lkey,0,read)
 #define las_key_remove_init(L,lkey)     las_key_init_prepare(L,lkey,0,remove)
 #define las_key_operate_init(L,lkey)    las_key_init_prepare(L,lkey,-1,operate)
+#define las_key_apply_init(L,lkey)      las_key_init_prepare(L,lkey,-1,apply)
 
 #define las_key_dispose( lkey ) do { \
     as_record_destroy( (lkey)->rec ); \
@@ -336,6 +337,101 @@ static int operate_lua( lua_State *L )
     
     las_key_dispose( &lkey );
 
+    return rv;
+}
+
+
+static int apply_lua( lua_State *L )
+{
+    int argc = lua_gettop( L );
+    int rv = 1;
+    las_key_t lkey;
+    as_error err;
+    as_val *res = NULL;
+    const char *module = NULL;
+    const char *function = NULL;
+    int nargs = argc - 4;
+    int idx = 5;
+    as_val *val = NULL;
+    as_arraylist args;
+    
+    if( las_key_apply_init( L, &lkey ) != 0 ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+    // arg#3 module
+    else if( lua_type( L, -3 ) != LUA_TSTRING ){
+        las_key_dispose( &lkey );
+        luaL_checktype( L, -3, LUA_TSTRING );
+    }
+    // arg#4 function
+    else if( lua_type( L, -4 ) != LUA_TSTRING ){
+        las_key_dispose( &lkey );
+        luaL_checktype( L, -4, LUA_TSTRING );
+    }
+    module = lua_tostring( L, -3 );
+    function = lua_tostring( L, -4 );
+    
+    // arg#5 arguments for function
+    as_arraylist_init( &args, argc - 4, 0 );
+    // set bin names
+    for(; idx <= nargs; idx++ )
+    {
+        switch( lua_type( L, idx ) ){
+            case LUA_TSTRING:
+                as_arraylist_append_str( &args, lua_tostring( L, idx ) );
+            break;
+            case LUA_TNUMBER:
+                as_arraylist_append_int64( &args, idx );
+            break;
+            case LUA_TTABLE:
+                lua_pushvalue( L, idx );
+                if( !( val = lstate_tbl2asval( L ) ) ){
+                    as_arraylist_destroy( &args );
+                    las_key_dispose( &lkey );
+                    lua_pushnil( L );
+                    lua_replace( L, -2 );
+                    return 2;
+                }
+                lua_pop( L, 1 );
+                as_arraylist_append( &args, val );
+            break;
+            
+            // LUA_TBOOLEAN
+            // LUA_TFUNCTION
+            // LUA_TTHREAD
+            // LUA_TUSERDATA
+            // LUA_TLIGHTUSERDATA
+            // LUA_TNIL
+            // LUA_TNONE
+            default:
+                as_arraylist_destroy( &args );
+                las_key_dispose( &lkey );
+                lua_pushnil( L );
+                lua_pushfstring( L, "bin name#%d must be type of string", idx-1 );
+                return 2;
+        }
+    }
+    
+    
+    switch( aerospike_key_apply( lkey.as, &err, lkey.policy, lkey.key, module,
+                                 function, (as_list*)&args, &res ) ){
+        case AEROSPIKE_OK:
+            if( !lstate_asval2lua( L, res ) ){
+                lua_pushnil( L );
+            }
+            as_val_destroy( res );
+        break;
+        
+        default:
+            lua_pushnil( L );
+            lua_pushstring( L, err.message );
+            rv++;
+    }
+    as_arraylist_destroy( &args );
+    las_key_dispose( &lkey );
+    
     return rv;
 }
 
@@ -890,6 +986,7 @@ int las_ctx_init( lua_State *L )
         { "exists", exists_lua },
         { "remove", remove_lua },
         { "operate", operate_lua },
+        { "apply", apply_lua },
         // batch ops
         { "batchGet", batchget_lua },
         { "batchExists", batchexists_lua },
@@ -903,7 +1000,6 @@ int las_ctx_init( lua_State *L )
         { "indexCreate", indexcreate_lua },
         { "indexRemove", indexremove_lua },
         /* not yet implemented
-        { "apply", apply_lua },
         // query ops
         { "query", query_lua },
         // UDF ops
