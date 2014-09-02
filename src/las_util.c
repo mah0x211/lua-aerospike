@@ -358,7 +358,7 @@ static void set_asarr2tbl( lua_State *L, as_arraylist *arr )
 }
 
 
-void lstate_asval2lua( lua_State *L, as_val *val )
+int lstate_asval2lua( lua_State *L, as_val *val )
 {
     switch( as_val_type( val ) ){
         case AS_INTEGER:
@@ -381,22 +381,33 @@ void lstate_asval2lua( lua_State *L, as_val *val )
         // other: unsupported data types
         // ignore nil value
         // AS_NIL
+        default:
+            return 0;
     }
+    return 1;
 }
 
 static void set_kval2lua( lua_State *L, const char *name, as_val *val )
 {
     lua_pushstring( L, name );
-    lstate_asval2lua( L, val );
-    lua_rawset( L, -3 );
+    if( lstate_asval2lua( L, val ) ){
+        lua_rawset( L, -3 );
+    }
+    else {
+        lua_pop( L, 1 );
+    }
 }
 
 
 static void set_ival2lua( lua_State *L, int idx, as_val *val )
 {
     lua_pushnumber( L, idx );
-    lstate_asval2lua( L, val );
-    lua_rawset( L, -3 );
+    if( lstate_asval2lua( L, val ) ){
+        lua_rawset( L, -3 );
+    }
+    else {
+        lua_pop( L, 1 );
+    }
 }
 
 
@@ -419,5 +430,6 @@ uint16_t lstate_asrec2tbl( lua_State *L, as_record *rec )
     
     return nbin;
 }
+
 
 
