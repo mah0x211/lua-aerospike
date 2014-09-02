@@ -347,61 +347,67 @@ static int operate_lua( lua_State *L )
 }
 
 
-static int apply_lua( lua_State *L )
-{
-    int argc = lua_gettop( L );
-    int rv = 1;
-    las_key_t lkey;
-    as_error err;
-    as_val *res = NULL;
-    const char *module = NULL;
-    const char *function = NULL;
-    int nargs = argc - 4;
-    int idx = 5;
-    as_val *val = NULL;
+typedef struct {
+    const char *module;
+    const char *function;
     as_arraylist args;
-    
-    if( las_key_apply_init( L, &lkey ) != 0 ){
-        lua_pushnil( L );
-        lua_pushstring( L, strerror( errno ) );
-        return 2;
-    }
+} las_apply_args_t;
+
+typedef enum {
+    LAS_APPLY_EMODULE = 1,
+    LAS_APPLY_EFUNCTION,
+    LAS_APPLY_EARGS,
+    LAS_APPLY_ESYS
+} las_apply_args_err_t;
+
+static int set_apply_args( lua_State *L, const int argc,
+                           las_apply_args_t *apply, const int idx )
+{
+    const int module_idx = idx;
+    const int function_idx = idx + 1;
+    const int nargs = argc - function_idx;
+    int args_idx = idx + 2;
+    as_val *val = NULL;
+
     // arg#3 module
-    else if( lua_type( L, 3 ) != LUA_TSTRING ){
-        las_key_dispose( &lkey );
-        luaL_checktype( L, 3, LUA_TSTRING );
+    if( lua_type( L, module_idx ) != LUA_TSTRING ){
+        return LAS_APPLY_EMODULE;
     }
     // arg#4 function
-    else if( lua_type( L, 4 ) != LUA_TSTRING ){
-        las_key_dispose( &lkey );
-        luaL_checktype( L, 4, LUA_TSTRING );
+    else if( lua_type( L, function_idx ) != LUA_TSTRING ){
+        return LAS_APPLY_EFUNCTION;
     }
-    module = lua_tostring( L, 3 );
-    function = lua_tostring( L, 4 );
-    
+    apply->module = lua_tostring( L, module_idx );
+    apply->function = lua_tostring( L, function_idx );
     // arg#5 arguments for function
-    as_arraylist_init( &args, nargs, 0 );
+    if( !as_arraylist_init( &apply->args, nargs, 0 ) ){
+        return LAS_APPLY_ESYS;
+    }
     // set arguments
-    for(; idx <= argc; idx++ )
+    for(; args_idx <= argc; args_idx++ )
     {
-        switch( lua_type( L, idx ) ){
+        switch( lua_type( L, args_idx ) ){
             case LUA_TSTRING:
-                as_arraylist_append_str( &args, lua_tostring( L, idx ) );
+                as_arraylist_append_str( &apply->args,
+                                         lua_tostring( L, args_idx ) );
             break;
             case LUA_TNUMBER:
-                as_arraylist_append_int64( &args, idx );
+                as_arraylist_append_int64( &apply->args,
+                                           lua_tointeger( L, args_idx ) );
             break;
             case LUA_TTABLE:
-                lua_pushvalue( L, idx );
+                lua_pushvalue( L, args_idx );
                 if( !( val = lstate_tbl2asval( L ) ) ){
-                    as_arraylist_destroy( &args );
-                    las_key_dispose( &lkey );
-                    lua_pushnil( L );
-                    lua_replace( L, -2 );
-                    return 2;
+                    as_arraylist_destroy( &apply->args );
+                    return LAS_APPLY_EARGS;
                 }
                 lua_pop( L, 1 );
-                as_arraylist_append( &args, val );
+                as_arraylist_append( &apply->args, val );
+            break;
+            
+            case LUA_TNONE:
+            case LUA_TNIL:
+                as_arraylist_append( &apply->args, (as_val*)&as_nil );
             break;
             
             // LUA_TBOOLEAN
@@ -409,19 +415,62 @@ static int apply_lua( lua_State *L )
             // LUA_TTHREAD
             // LUA_TUSERDATA
             // LUA_TLIGHTUSERDATA
-            // LUA_TNIL
-            // LUA_TNONE
             default:
-                as_arraylist_destroy( &args );
-                las_key_dispose( &lkey );
+                as_arraylist_destroy( &apply->args );
                 lua_pushnil( L );
-                lua_pushfstring( L, "arg#%d is not supported data type", idx-1 );
-                return 2;
+                lua_pushfstring( L, "arg#%d is not supported data type",
+                                 args_idx-1 );
+                return LAS_APPLY_EARGS;
         }
     }
     
-    switch( aerospike_key_apply( lkey.as, &err, lkey.policy, lkey.key, module,
-                                 function, (as_list*)&args, &res ) ){
+    return 0;
+}
+
+
+static int apply_lua( lua_State *L )
+{
+    int argc = lua_gettop( L );
+    int rv = 1;
+    las_key_t lkey;
+    as_error err;
+    as_val *res = NULL;
+    las_apply_args_t apply;
+    
+    if( las_key_apply_init( L, &lkey ) != 0 ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+    switch( set_apply_args( L, argc, &apply, 3 ) )
+    {
+        // arg#3 module
+        case LAS_APPLY_EMODULE:
+            las_key_dispose( &lkey );
+            luaL_checktype( L, 3, LUA_TSTRING );
+        break;
+        // arg#4 function
+        case LAS_APPLY_EFUNCTION:
+            las_key_dispose( &lkey );
+            luaL_checktype( L, 4, LUA_TSTRING );
+        break;
+        // failed to as_arraylist_init
+        case LAS_APPLY_ESYS:
+            las_key_dispose( &lkey );
+            lua_pushnil( L );
+            lua_pushstring( L, strerror( errno ) );
+            return 2;
+        // arg#5 arguments for function
+        case LAS_APPLY_EARGS:
+            las_key_dispose( &lkey );
+            lua_pushnil( L );
+            lua_replace( L, -3 );
+            return 2;
+    }
+    
+    switch( aerospike_key_apply( lkey.as, &err, lkey.policy, lkey.key,
+                                 apply.module, apply.function,
+                                 (as_list*)&apply.args, &res ) ){
         case AEROSPIKE_OK:
             if( !lstate_asval2lua( L, res ) ){
                 lua_pushnil( L );
@@ -434,7 +483,7 @@ static int apply_lua( lua_State *L )
             lua_pushstring( L, err.message );
             rv++;
     }
-    as_arraylist_destroy( &args );
+    as_arraylist_destroy( &apply.args );
     las_key_dispose( &lkey );
     
     return rv;
@@ -822,7 +871,7 @@ static bool infoeach_cb( const as_error *err, const as_node *node,
     }
     lstate_str2tbl( L, "host", host->name );
     lstate_num2tbl( L, "port", ntohs( host->addr.sin_port ) );
-    lua_rawseti( L, -2, info->nitem++ );
+    lua_rawseti( L, -2, ++(info->nitem) );
     
     return true;
 }
