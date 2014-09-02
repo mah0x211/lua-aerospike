@@ -360,6 +360,9 @@ static void set_asarr2tbl( lua_State *L, as_arraylist *arr )
 int lstate_asval2lua( lua_State *L, as_val *val )
 {
     switch( as_val_type( val ) ){
+        case AS_BOOLEAN:
+            lua_pushboolean( L, as_boolean_get( (as_boolean*)val ) );
+        break;
         case AS_INTEGER:
             lua_pushinteger( L, as_integer_get( (as_integer*)val ) );
         break;
@@ -375,6 +378,9 @@ int lstate_asval2lua( lua_State *L, as_val *val )
         break;
         case AS_MAP:
             set_asmap2tbl( L, (as_hashmap*)val );
+        break;
+        case AS_REC:
+            lstate_asrec2tbl( L, (as_record*)val );
         break;
         
         // other: unsupported data types
