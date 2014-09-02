@@ -31,6 +31,7 @@ local TESTS = {
     'batchExists',
     'scanEach',
     'scanBackground',
+    'apply',
     'remove',
     'info',
     'infoEach',

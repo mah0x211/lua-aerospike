@@ -41,6 +41,19 @@ return {
         ['sample_udf2.lua'] = UDF_TMPL:gsub( '$NAME', 'hello2' ) ..
                               UDF_TMPL:gsub( '$NAME', 'world2' )
     },
+    APPLY = {
+        module = 'sample_udf1',
+        func = 'hello1',
+        args = {
+            'a1', 'a2', 'a3', {
+                b1 = {
+                    x = 'x',
+                    y = 'y'
+                },
+                b2 = 'z'
+            }
+        }
+    },
     OPEARATE = {
         a = {
             append = 'append str'
@@ -84,3 +97,5 @@ return {
         }
     }
 };
+
+
