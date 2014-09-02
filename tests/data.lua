@@ -28,12 +28,11 @@ return {
     TTL = -1,
     SELECT = { 'a', 'b', 'list' },
     IDX_STR = {
-        NAME = 'index_a',
-        BIN = 'a'
+        { NAME = 'index_a', BIN = 'a' },
+        { NAME = 'index_b', BIN = 'b' }
     },
     IDX_INT = {
-        NAME = 'index_c',
-        BIN = 'c'
+        { NAME = 'index_c', BIN = 'c' }
     },
     UDF = {
         ['sample_udf1.lua'] = UDF_TMPL:gsub( '$NAME', 'hello1' ) ..

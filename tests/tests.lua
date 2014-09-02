@@ -20,9 +20,8 @@ local TESTS = {
     'udf_put',
     'udf_get',
     'context',
-    'put',
     'indexCreate',
-    'indexRemove',
+    'put',
     'get',
     'select',
     'exists',
@@ -35,6 +34,7 @@ local TESTS = {
     'remove',
     'info',
     'infoEach',
+    'indexRemove',
     'udf_remove',
     'disconnect'
 };
