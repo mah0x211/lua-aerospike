@@ -358,28 +358,24 @@ static void set_asarr2tbl( lua_State *L, as_arraylist *arr )
 }
 
 
-static void set_kval2lua( lua_State *L, const char *name, as_val *val )
+void lstate_asval2lua( lua_State *L, as_val *val )
 {
     switch( as_val_type( val ) ){
         case AS_INTEGER:
-            lstate_num2tbl( L, name, as_integer_get( (as_integer*)val ) );
+            lua_pushinteger( L, as_integer_get( (as_integer*)val ) );
         break;
         case AS_STRING:
-            lstate_str2tbl( L, name, as_string_get( (as_string*)val ) );
+            lua_pushstring( L, as_string_get( (as_string*)val ) );
         break;
         case AS_BYTES:
-            lstate_strn2tbl( L, name, (char*)as_bytes_get( (as_bytes*)val ),
+            lua_pushlstring( L, (char*)as_bytes_get( (as_bytes*)val ),
                              as_bytes_size( (as_bytes*)val ) );
         break;
         case AS_LIST:
-            lua_pushstring( L, name );
             set_asarr2tbl( L, (as_arraylist*)val );
-            lua_rawset( L, -3 );
         break;
         case AS_MAP:
-            lua_pushstring( L, name );
             set_asmap2tbl( L, (as_hashmap*)val );
-            lua_rawset( L, -3 );
         break;
         
         // other: unsupported data types
@@ -388,35 +384,19 @@ static void set_kval2lua( lua_State *L, const char *name, as_val *val )
     }
 }
 
+static void set_kval2lua( lua_State *L, const char *name, as_val *val )
+{
+    lua_pushstring( L, name );
+    lstate_asval2lua( L, val );
+    lua_rawset( L, -3 );
+}
+
 
 static void set_ival2lua( lua_State *L, int idx, as_val *val )
 {
-    switch( as_val_type( val ) ){
-        case AS_INTEGER:
-            lstate_num2arr( L, idx, as_integer_get( (as_integer*)val ) );
-        break;
-        case AS_STRING:
-            lstate_str2arr( L, idx, as_string_get( (as_string*)val ) );
-        break;
-        case AS_BYTES:
-            lstate_strn2arr( L, idx, (char*)as_bytes_get( (as_bytes*)val ),
-                             as_bytes_size( (as_bytes*)val ) );
-        break;
-        case AS_LIST:
-            lua_pushnumber( L, idx );
-            set_asarr2tbl( L, (as_arraylist*)val );
-            lua_rawset( L, -3 );
-        break;
-        case AS_MAP:
-            lua_pushnumber( L, idx );
-            set_asmap2tbl( L, (as_hashmap*)val );
-            lua_rawset( L, -3 );
-        break;
-        
-        // other: unsupported data types
-        // ignore nil value
-        // AS_NIL
-    }
+    lua_pushnumber( L, idx );
+    lstate_asval2lua( L, val );
+    lua_rawset( L, -3 );
 }
 
 
