@@ -120,6 +120,25 @@ static inline void digest2hex( uint8_t *buf, uint8_t digest[], size_t len )
 }while(0)
 
 
+
+#define lstate_popfalse(L,i) ({ \
+    lua_pop( L, i ); \
+    0; \
+})
+
+#define lstate_getidx(L,i,t) ({ \
+    lua_pushnumber(L,i); \
+    lua_rawget(L,-2); \
+    (lua_type(L,-1) == t) ? 1 : lstate_popfalse(L,1); \
+})
+
+#define lstate_getfield(L,v,t) ({ \
+    lua_pushstring(L,v); \
+    lua_rawget(L,-2); \
+    (lua_type(L,-1) == t) ? 1 : lstate_popfalse(L,1); \
+})
+
+
 #define lstate_checklstring(L,idx,len) \
     (luaL_checktype(L,idx,LUA_TSTRING),lua_tolstring(L,idx,len))
 
@@ -223,6 +242,8 @@ static inline int lstate_tablelen( lua_State *L, size_t *len )
 
 as_record *lstate_tbl2asrec( lua_State *L );
 as_val *lstate_tbl2asval( lua_State *L );
+as_query *lstate_tbl2asqry( lua_State *L, const char *ns, const char *set );
+
 int lstate_asval2lua( lua_State *L, as_val *val );
 uint16_t lstate_asrec2tbl( lua_State *L, as_record *rec );
 

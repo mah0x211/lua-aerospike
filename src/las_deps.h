@@ -61,6 +61,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_bin.h>
+#include <aerospike/as_nil.h>
 
 
 #define STRINGIZE(A) #A
@@ -83,6 +84,9 @@
 
 #define LAS_ERR_TTL_RANGE \
     "ttl must be 0 to " STRINGIZE(UINT32_MAX)
+
+#define LAS_ERR_ORDERBY_LIMIT \
+    "number of orderby limit(" STRINGIZE(UINT16_MAX) ") exceeded"
 
 
 static inline const char *LAS_CHK_LBINNAME( lua_State *L, int idx, size_t *len )

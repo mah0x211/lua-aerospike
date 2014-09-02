@@ -322,6 +322,224 @@ as_record *lstate_tbl2asrec( lua_State *L )
 }
 
 
+
+// MARK: convert lua table to as_query
+static int set_tbl2asqry_orderby( lua_State *L, as_query *qry )
+{
+    size_t len = 0;
+    
+    if( !lstate_getfield( L, "orderby", LUA_TTABLE ) ){
+        return 0;
+    }
+    else if( lstate_tablelen( L, &len ) != LUA_TTABLE_HASH ){
+        lua_pushnil( L );
+        lua_pushliteral( L, "orderby field must be hash table" );
+    }
+    else if( len > UINT16_MAX ){
+        lua_pushnil( L );
+        lua_pushliteral( L, LAS_ERR_ORDERBY_LIMIT );
+    }
+    else if( !as_query_orderby_init( qry, (uint16_t)len ) ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+    }
+    else
+    {
+        const char *bin = NULL;
+        as_order order;
+        
+        lua_pushnil( L );
+        while( lua_next( L, -2 ) )
+        {
+            if( !( bin = LAS_CHK_BINNAME( L, -2 ) ) ){
+                lua_pop( L, 2 );
+                lua_pushnil( L );
+                lua_pushliteral( L, LAS_ERR_BIN_NAME );
+                break;
+            }
+            // check order
+            else if( lua_type( L, -1 ) != LUA_TNUMBER ||
+                    ( ( order = (as_order)lua_tointeger( L, -1 ) ) != AS_ORDER_ASCENDING &&
+                    order != AS_ORDER_DESCENDING ) ) {
+                lua_pop( L, 2 );
+                lua_pushnil( L );
+                lua_pushliteral( L, "order must be ORDER_ASC | ORDER_DESC" );
+                return -1;
+            }
+            
+            as_query_orderby( qry, bin, order );
+            lua_pop( L, 1 );
+        }
+        lua_pop( L, 1 );
+        
+        return 0;
+    }
+    
+    return -1;
+}
+
+
+static int set_tbl2asqry_where_range( lua_State *L, as_query *qry,
+                                      const char *bin )
+{
+    int nval = 0;
+    lua_Integer range[2];
+    
+    lua_pushnil( L );
+    while( lua_next( L, -2 ) )
+    {
+        if( nval > 1 ||
+            lua_type( L, -1 ) != LUA_TNUMBER ||
+            lua_type( L, -2 ) != LUA_TNUMBER ){
+            lua_pushnil( L );
+            lua_pushliteral( L, "range value must be { min, max }" );
+            return -1;
+        }
+        
+        range[nval] = lua_tointeger( L, -1 );
+        nval++;
+        lua_pop( L, 1 );
+    }
+    
+    as_query_where( qry, bin, integer_range( range[0], range[1] ) );
+    
+    return 0;
+}
+
+static int set_tbl2asqry_where( lua_State *L, as_query *qry )
+{
+    size_t len = 0;
+    
+    if( !lstate_getfield( L, "where", LUA_TTABLE ) ){
+        return 0;
+    }
+    else if( lstate_tablelen( L, &len ) != LUA_TTABLE_HASH ){
+        lua_pushnil( L );
+        lua_pushliteral( L, "where field must be hash table" );
+    }
+    else if( len > UINT16_MAX ){
+        lua_pushnil( L );
+        lua_pushliteral( L, LAS_ERR_ORDERBY_LIMIT );
+    }
+    else
+    {
+        const char *bin = NULL;
+        
+        as_query_where_init( qry, (uint16_t)len );
+        lua_pushnil( L );
+        while( lua_next( L, -2 ) )
+        {
+            if( !( bin = LAS_CHK_BINNAME( L, -2 ) ) ){
+                lua_pop( L, 2 );
+                lua_pushnil( L );
+                lua_pushliteral( L, LAS_ERR_BIN_NAME );
+                break;
+            }
+            // check order
+            switch( lua_type( L, -1 ) )
+            {
+                case LUA_TNUMBER:
+                    as_query_where( qry, bin,
+                                    integer_equals( lua_tointeger( L, -1 ) ) );
+                break;
+                case LUA_TSTRING:
+                    as_query_where( qry, bin,
+                                    string_equals( lua_tostring( L, -1 ) ) );
+                break;
+                case LUA_TTABLE:
+                    if( set_tbl2asqry_where_range( L, qry, bin ) != 0 ){
+                        return -1;
+                    }
+                break;
+                
+                default:
+                    lua_pop( L, 2 );
+                    lua_pushnil( L );
+                    lua_pushfstring( L, "where value %s not supported",
+                                     lua_typename( L, lua_type( L, -1 ) ) );
+                    return -1;
+            }
+            lua_pop( L, 1 );
+        }
+        lua_pop( L, 1 );
+        
+        return 0;
+    }
+    
+    return -1;
+}
+
+
+static int set_tbl2asqry_select( lua_State *L, as_query *qry )
+{
+    size_t len = 0;
+    
+    if( !lstate_getfield( L, "select", LUA_TTABLE ) ){
+        return 0;
+    }
+    else if( lstate_tablelen( L, &len ) != LUA_TTABLE_LIST ){
+        lua_pushnil( L );
+        lua_pushliteral( L, "select field must be array table" );
+    }
+    else if( len > UINT16_MAX ){
+        lua_pushnil( L );
+        lua_pushliteral( L, LAS_ERR_BIN_LIMIT );
+    }
+    else if( !as_query_select_init( qry, (uint16_t)len ) ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+    }
+    else
+    {
+        const char *bin = NULL;
+        
+        lua_pushnil( L );
+        while( lua_next( L, -2 ) )
+        {
+            if( !( bin = LAS_CHK_BINNAME( L, -1 ) ) ){
+                lua_pop( L, 2 );
+                lua_pushnil( L );
+                lua_pushliteral( L, LAS_ERR_BIN_NAME );
+                return -1;
+            }
+            
+            as_query_select( qry, bin );
+            lua_pop( L, 1 );
+        }
+        lua_pop( L, 1 );
+        
+        return 0;
+    }
+    
+    return -1;
+}
+
+as_query *lstate_tbl2asqry( lua_State *L, const char *ns, const char *set )
+{
+    as_query *qry = NULL;
+    
+    // check argument
+    luaL_checktype( L, 2, LUA_TTABLE );
+    if( !( qry = as_query_new( ns, set ) ) ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+    }
+    else
+    {
+        lua_pushvalue( L, 2 );
+        if( set_tbl2asqry_select( L, qry ) != 0 ||
+            set_tbl2asqry_where( L, qry ) != 0 ||
+            set_tbl2asqry_orderby( L, qry ) != 0 ){
+            as_query_destroy( qry );
+            return NULL;
+        }
+        lua_pop( L, 1 );
+    }
+    
+    return qry;
+}
+
+
 // MARK: convert record to lua table
 static void set_kval2lua( lua_State *L, const char *name, as_val *val );
 static void set_ival2lua( lua_State *L, int idx, as_val *val );
