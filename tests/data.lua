@@ -53,6 +53,12 @@ return {
             }
         }
     },
+    QUERY = {
+        select = { 'b', 'c', 'map' },
+        where = {
+            c = { 15, 18 }
+        }
+    },
     OPEARATE = {
         a = {
             append = 'append str'

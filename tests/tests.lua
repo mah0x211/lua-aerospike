@@ -31,6 +31,7 @@ local TESTS = {
     'scanEach',
     'scanBackground',
     'apply',
+    'query',
     'remove',
     'info',
     'infoEach',
