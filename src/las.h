@@ -23,7 +23,7 @@
  *  las.h
  *  lua-aerospike
  *
- *  Created by Masatoshi Teruya on 14/08/24.
+ *  Created by Masatoshi Teruya on 2014/08/24.
  *
  */
 
@@ -42,6 +42,7 @@
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/aerospike_info.h>
 #include <aerospike/aerospike_index.h>
+#include <aerospike/aerospike_udf.h>
 // record
 #include <aerospike/as_record.h>
 #include <aerospike/as_record_iterator.h>
@@ -66,6 +67,7 @@
 
 // define module names
 #define LAS_CONNECT_MT      "aerospike.connect"
+#define LAS_UDF_MT          "aerospike.udf"
 #define LAS_CONTEXT_MT      "aerospike.context"
 #define LAS_OPERATION_MT    "aerospike.operation"
 #define LAS_RECORD_MT       "aerospike.record"

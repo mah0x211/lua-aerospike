@@ -23,7 +23,7 @@
  *  las_connect.c
  *  lua-aerospike
  *
- *  Created by Masatoshi Teruya on 14/08/24.
+ *  Created by Masatoshi Teruya on 2014/08/24.
  *
  */
 

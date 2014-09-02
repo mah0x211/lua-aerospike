@@ -20,42 +20,18 @@
  *  THE SOFTWARE.
  *
  *
- *  las.c
+ *  las_udf.h
  *  lua-aerospike
  *
- *  Created by Masatoshi Teruya on 2014/08/24.
+ *  Created by Masatoshi Teruya on 2014/09/02.
  *
  */
 
-#include "las.h"
-#include "las_connect.h"
-#include "las_udf.h"
-#include "las_ctx.h"
-#include "las_ops.h"
-#include "las_record.h"
+#ifndef lua_aerospike_las_udf_h
+#define lua_aerospike_las_udf_h
 
-LUALIB_API int luaopen_aerospike( lua_State *L )
-{
-    // context
-    las_ctx_init( L );
-    
-    // add methods
-    lua_newtable( L );
-    // connection
-    luaopen_aerospike_connect( L );
-    lua_setfield( L, -2, "open" );
-    // operation
-    luaopen_aerospike_operation( L );
-    lua_setfield( L, -2, "operation" );
-    // UDF
-    luaopen_aerospike_udf( L );
-    lua_setfield( L, -2, "udf" );
-    // record
-    //luaopen_aerospike_record( L );
-    //lua_setfield( L, -2, "record" );
-    
-    return 1;
-}
+// prototypes
+LUALIB_API int luaopen_aerospike_udf( lua_State *L );
 
 
-
+#endif
