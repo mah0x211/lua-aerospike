@@ -361,22 +361,22 @@ static int apply_lua( lua_State *L )
         return 2;
     }
     // arg#3 module
-    else if( lua_type( L, -3 ) != LUA_TSTRING ){
+    else if( lua_type( L, 3 ) != LUA_TSTRING ){
         las_key_dispose( &lkey );
-        luaL_checktype( L, -3, LUA_TSTRING );
+        luaL_checktype( L, 3, LUA_TSTRING );
     }
     // arg#4 function
-    else if( lua_type( L, -4 ) != LUA_TSTRING ){
+    else if( lua_type( L, 4 ) != LUA_TSTRING ){
         las_key_dispose( &lkey );
-        luaL_checktype( L, -4, LUA_TSTRING );
+        luaL_checktype( L, 4, LUA_TSTRING );
     }
-    module = lua_tostring( L, -3 );
-    function = lua_tostring( L, -4 );
+    module = lua_tostring( L, 3 );
+    function = lua_tostring( L, 4 );
     
     // arg#5 arguments for function
-    as_arraylist_init( &args, argc - 4, 0 );
+    as_arraylist_init( &args, nargs, 0 );
     // set bin names
-    for(; idx <= nargs; idx++ )
+    for(; idx <= argc; idx++ )
     {
         switch( lua_type( L, idx ) ){
             case LUA_TSTRING:
@@ -413,7 +413,6 @@ static int apply_lua( lua_State *L )
                 return 2;
         }
     }
-    
     
     switch( aerospike_key_apply( lkey.as, &err, lkey.policy, lkey.key, module,
                                  function, (as_list*)&args, &res ) ){
