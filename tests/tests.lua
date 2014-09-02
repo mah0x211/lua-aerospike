@@ -15,6 +15,10 @@ local SEACHPATH = CWD .. '/?.lua;' .. package.path;
 local EXTENSION = '.lua';
 local TESTS = {
     'connect',
+    'udf',
+    'udf_list',
+    'udf_put',
+    'udf_get',
     'context',
     'put',
     'indexCreate',
@@ -30,6 +34,7 @@ local TESTS = {
     'remove',
     'info',
     'infoEach',
+    'udf_remove',
     'disconnect'
 };
 
