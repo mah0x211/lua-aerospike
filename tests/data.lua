@@ -5,13 +5,14 @@ for i = 1, 1 do
 end
 
 local UDF_TMPL = [[
+
 function $NAME( ... )
     local args = {};
     local i, v;
     for i, v in ipairs({...}) do
         args[#args+1] = i .. ':' .. tostring( v );
     end
-    return '$FUNC - args: ' .. table.concat( args, ' | ' );
+    return '$NAME - args: ' .. table.concat( args, ' | ' );
 end
 
 ]];
