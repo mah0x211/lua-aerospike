@@ -967,6 +967,100 @@ static int indexremove_lua( lua_State *L )
 }
 
 
+// MARK: query operation
+
+typedef struct {
+    lua_State *L;
+    int nitem;
+} las_query_t;
+
+static bool query_cb( const as_val *val, void *udata )
+{
+    if( val )
+    {
+        las_query_t *lqry = (las_query_t*)udata;
+        int idx = lqry->nitem + 1;
+        
+        lua_pushnumber( lqry->L, idx );
+        if( lstate_asval2lua( lqry->L, (as_val*)val ) ){
+            lua_rawset( lqry->L, -3 );
+            lqry->nitem = idx;
+        }
+        else {
+            lua_pop( lqry->L, 1 );
+        }
+    }
+    
+    return true;
+}
+
+static int query_lua( lua_State *L )
+{
+    int rv = 1;
+    int argc = lua_gettop( L );
+    las_conn_t *conn = NULL;
+    las_ctx_t *ctx = get_context( L, &conn );
+    as_query *qry = lstate_tbl2asqry( L, ctx->ns, ctx->set );
+    las_query_t lqry = {
+        .L = L,
+        .nitem = 0
+    };
+    las_apply_args_t apply;
+    as_error err;
+    
+    if( !qry ){
+        return 2;
+    }
+    else if( argc > 2 )
+    {
+        switch( set_apply_args( L, argc, &apply, 3 ) )
+        {
+            // arg#3 module
+            case LAS_APPLY_EMODULE:
+                as_query_destroy( qry );
+                luaL_checktype( L, 3, LUA_TSTRING );
+            break;
+            // arg#4 function
+            case LAS_APPLY_EFUNCTION:
+                as_query_destroy( qry );
+                luaL_checktype( L, 4, LUA_TSTRING );
+            break;
+            // failed to as_arraylist_init
+            case LAS_APPLY_ESYS:
+                as_query_destroy( qry );
+                lua_pushnil( L );
+                lua_pushstring( L, strerror( errno ) );
+                return 2;
+            // arg#5 arguments for function
+            case LAS_APPLY_EARGS:
+                as_query_destroy( qry );
+                lua_pushnil( L );
+                lua_replace( L, -3 );
+                return 2;
+        }
+        
+        as_query_apply( qry, apply.module, apply.function,
+                        (const as_list*)&apply.args );
+    }
+    
+    lua_newtable( L );
+    if( aerospike_query_foreach( conn->as, &err, NULL, qry,
+                                 query_cb, (void*)&lqry ) != AEROSPIKE_OK ){
+        lua_pop( L, 1 );
+        lua_pushnil( L );
+        lua_pushstring( L, err.message );
+        rv++;
+    }
+    
+    if( argc > 1 ){
+        as_arraylist_destroy( &apply.args );
+    }
+    as_query_destroy( qry );
+    
+    return rv;
+}
+
+
 
 int las_ctx_alloc_lua( lua_State *L )
 {
@@ -1061,10 +1155,8 @@ void las_ctx_init( lua_State *L )
         // index ops
         { "indexCreate", indexcreate_lua },
         { "indexRemove", indexremove_lua },
-        /* not yet implemented
         // query ops
         { "query", query_lua },
-        */
         { NULL, NULL }
     };
     
