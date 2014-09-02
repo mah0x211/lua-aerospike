@@ -92,7 +92,7 @@ static inline const char *LAS_CHK_LBINNAME( lua_State *L, int idx, size_t *len )
     if( lua_type( L, idx ) == LUA_TSTRING )
     {
         bin = lua_tolstring( L, idx, len );
-        if( *len > AS_BIN_NAME_MAX_LEN ){
+        if( !*len || *len > AS_BIN_NAME_MAX_LEN ){
             return NULL;
         }
     }
