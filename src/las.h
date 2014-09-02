@@ -36,34 +36,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include <aerospike/aerospike.h>
-#include <aerospike/aerospike_key.h>
-#include <aerospike/aerospike_batch.h>
-#include <aerospike/aerospike_scan.h>
-#include <aerospike/aerospike_info.h>
-#include <aerospike/aerospike_index.h>
-#include <aerospike/aerospike_udf.h>
-// record
-#include <aerospike/as_record.h>
-#include <aerospike/as_record_iterator.h>
-// lists
-#include <aerospike/as_list.h>
-#include <aerospike/as_iterator.h>
-#include <aerospike/as_arraylist.h>
-#include <aerospike/as_arraylist_iterator.h>
-// maps
-#include <aerospike/as_hashmap.h>
-#include <aerospike/as_stringmap.h>
-#include <aerospike/as_pair.h>
-#include <aerospike/as_hashmap_iterator.h>
-// primitives
-#include <aerospike/as_node.h>
-#include <aerospike/as_boolean.h>
-#include <aerospike/as_status.h>
-#include <aerospike/as_error.h>
-#include <aerospike/as_key.h>
-#include <aerospike/as_bin.h>
-
+#include "las_deps.h"
 
 // define module names
 #define LAS_CONNECT_MT      "aerospike.connect"

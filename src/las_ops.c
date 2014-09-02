@@ -57,10 +57,10 @@ static las_ops_t *get_operaions( lua_State *L, las_ops_binop_t **op )
 static int set_binname2binop( lua_State *L, las_ops_binop_t *op )
 {
     size_t len = 0;
-    const char *binname = lstate_checklstring( L, 2, &len );
+    const char *binname = LAS_CHK_LBINNAME( L, 2, &len );
     
     // check binname length
-    if( len <= AS_BIN_NAME_MAX_LEN ){
+    if( binname ){
         memcpy( op->name, binname, len );
         op->name[len] = 0;
         return 0;
@@ -68,7 +68,7 @@ static int set_binname2binop( lua_State *L, las_ops_binop_t *op )
     
     // error
     lua_pushnil( L );
-    lua_pushfstring( L, "bin name length must be 0-%d", AS_BIN_NAME_MAX_LEN );
+    lua_pushliteral( L, LAS_ERR_BIN_NAME );
     
     return 2;
 }

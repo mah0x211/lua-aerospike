@@ -40,7 +40,7 @@ typedef struct {
     int ref_conn;
 } las_ctx_t;
 
-int las_ctx_init( lua_State *L );
+void las_ctx_init( lua_State *L );
 int las_ctx_alloc_lua( lua_State *L );
 
 

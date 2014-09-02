@@ -250,13 +250,13 @@ as_record *lstate_tbl2asrec( lua_State *L )
     // check table
     if( lstate_tablelen( L, &len ) != LUA_TTABLE_HASH ){
         lua_pushboolean( L, 0 );
-        lua_pushfstring( L, "record must be hash table" );
+        lua_pushliteral( L, "record must be hash table" );
         return NULL;
     }
     // number of bin limit exceeded
     else if( len >= UINT16_MAX ){
         lua_pushboolean( L, 0 );
-        lua_pushfstring( L, "number of bin limit(%d) exceeded", UINT16_MAX );
+        lua_pushliteral( L, LAS_ERR_BIN_LIMIT );
         return NULL;
     }
     // allocate record
@@ -272,10 +272,9 @@ as_record *lstate_tbl2asrec( lua_State *L )
     while( rv && lua_next( L, -2 ) )
     {
         // check name length
-        name = lua_tolstring( L, -2, &len );
-        if( !len || len > AS_BIN_NAME_MAX_LEN ){
+        if( !( name = LAS_CHK_BINNAME( L, -2 ) ) ){
             lua_pushboolean( L, 0 );
-            lua_pushfstring( L, "bin name length must be 1-%d", AS_BIN_NAME_MAX_LEN );
+            lua_pushliteral( L, LAS_ERR_BIN_NAME );
             as_record_destroy( rec );
             return NULL;
         }

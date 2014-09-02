@@ -108,7 +108,7 @@ static int put_lua( lua_State *L )
     // check record
     else if( lua_type( L, 3 ) != LUA_TTABLE ){
         lua_pushboolean( L, 0 );
-        lua_pushstring( L, "record must be type of table" );
+        lua_pushliteral( L, LAS_ERR_RECORD_TYPE );
         return 2;
     }
     // check ttl
@@ -118,7 +118,7 @@ static int put_lua( lua_State *L )
         if( lua_type( L, 4 ) != LUA_TNUMBER ||
             ( ttl = lua_tointeger( L, 4 ) ) < -1 || ttl > UINT32_MAX ){
             lua_pushboolean( L, 0 );
-            lua_pushfstring( L, "ttl must be -1 to %d", UINT32_MAX );
+            lua_pushliteral( L, LAS_ERR_TTL_RANGE );
             return 2;
         }
         lua_settop( L, 3 );
@@ -131,6 +131,7 @@ static int put_lua( lua_State *L )
     }
     // set ttl
     lkey.rec->ttl = (uint32_t)ttl;
+    
     switch( aerospike_key_put( lkey.as, &err, lkey.policy, lkey.key, lkey.rec ) ){
         case AEROSPIKE_OK:
             lua_pushboolean( L, 1 );
@@ -186,6 +187,7 @@ static int select_lua( lua_State *L )
     int rv = 1;
     int argc = lua_gettop( L );
     const char **bins = NULL;
+    const char *binname = NULL;
     int idx = 3;
     las_key_t lkey;
     as_error err;
@@ -201,17 +203,18 @@ static int select_lua( lua_State *L )
         lua_pushstring( L, strerror( errno ) );
         return 2;
     }
+    
     // set bin names
     for(; idx <= argc; idx++ )
     {
-        if( lua_type( L, idx ) != LUA_TSTRING ){
+        if( !( binname = LAS_CHK_BINNAME( L, idx ) ) ){
             las_key_dispose( &lkey );
             pdealloc( bins );
             lua_pushnil( L );
-            lua_pushfstring( L, "bin name#%d must be type of string", idx-1 );
+            lua_pushliteral( L, LAS_ERR_BIN_NAME );
             return 2;
         }
-        bins[idx-3] = lua_tostring( L, idx );
+        bins[idx-3] = binname;
     }
     bins[idx-3] = NULL;
     
@@ -249,6 +252,7 @@ static int exists_lua( lua_State *L )
         lua_pushstring( L, strerror( errno ) );
         return 2;
     }
+    
     switch( aerospike_key_exists( lkey.as, &err, lkey.policy, lkey.key, &lkey.rec ) ){
         case AEROSPIKE_OK:
             lua_pushboolean( L, 1 );
@@ -278,6 +282,7 @@ static int remove_lua( lua_State *L )
         lua_pushstring( L, strerror( errno ) );
         return 2;
     }
+    
     switch( aerospike_key_remove( lkey.as, &err, lkey.policy, lkey.key ) ){
         case AEROSPIKE_OK:
             lua_pushboolean( L, 1 );
@@ -300,7 +305,6 @@ static int operate_lua( lua_State *L )
 {
     int rv = 1;
     las_key_t lkey;
-    as_error err;
     las_ops_t *lops = luaL_checkudata( L, 3, LAS_OPERATION_MT );
     as_operations ops;
     
@@ -316,8 +320,10 @@ static int operate_lua( lua_State *L )
     }
     else
     {
-        switch( aerospike_key_operate( lkey.as, &err, lkey.policy, lkey.key, &ops,
-                                       &lkey.rec ) ){
+        as_error err;
+        
+        switch( aerospike_key_operate( lkey.as, &err, lkey.policy, lkey.key,
+                                       &ops, &lkey.rec ) ){
             case AEROSPIKE_OK:
                 lua_createtable( L, 0, 3 );
                 lstate_num2tbl( L, "ttl", lkey.rec->ttl );
@@ -375,7 +381,7 @@ static int apply_lua( lua_State *L )
     
     // arg#5 arguments for function
     as_arraylist_init( &args, nargs, 0 );
-    // set bin names
+    // set arguments
     for(; idx <= argc; idx++ )
     {
         switch( lua_type( L, idx ) ){
@@ -409,7 +415,7 @@ static int apply_lua( lua_State *L )
                 as_arraylist_destroy( &args );
                 las_key_dispose( &lkey );
                 lua_pushnil( L );
-                lua_pushfstring( L, "bin name#%d must be type of string", idx-1 );
+                lua_pushfstring( L, "arg#%d is not supported data type", idx-1 );
                 return 2;
         }
     }
@@ -519,13 +525,14 @@ static bool batchget_cb( const as_batch_read *results, uint32_t n, void *udata )
             // The transaction didn't succeed.
             default:
                 as_error_init( &err );
-                las_ctx_aserror( &err, results[i].result );
+                LAS_SET_ASERROR( &err, results[i].result );
                 lstate_str2tbl( L, key, err.message );
         }
     }
     
     return true;
 }
+
 
 static int batchget_lua( lua_State *L )
 {
@@ -630,7 +637,6 @@ static int scaneach_lua( lua_State *L )
         .nitem = 0
     };
     int rv = 2;
-    int idx = 3;
     as_error err;
     
     
@@ -654,15 +660,18 @@ static int scaneach_lua( lua_State *L )
     // set select bin names
     else
     {
+        int idx = 3;
+        const char *binname = NULL;
+        
         for(; idx <= argc; idx++ )
         {
-            if( lua_type( L, idx ) != LUA_TSTRING ){
+            if( !( binname = LAS_CHK_BINNAME( L, idx ) ) ){
                 as_scan_destroy( &seach.scan );
                 lua_pushnil( L );
-                lua_pushfstring( L, "bin#%d must be type of string", idx-1 );
+                lua_pushliteral( L, LAS_ERR_BIN_NAME );
                 return 2;
             }
-            as_scan_select( &seach.scan, lua_tostring( L, idx ) );
+            as_scan_select( &seach.scan, binname );
         }
     }
     
@@ -770,7 +779,8 @@ static int info_lua( lua_State *L )
     }
     
     if( aerospike_info_host( conn->as, &err, &ctx->policies.info, host, port,
-                             req, &res ) == AEROSPIKE_OK ){
+                             req, &res ) == AEROSPIKE_OK )
+    {
         if( res ){
             lua_pushstring( L, res );
             pdealloc( res );
@@ -853,9 +863,13 @@ static int indexcreate_lua( lua_State *L )
     las_ctx_t *ctx = get_context( L, &conn );
     lua_Integer type = lstate_checkinteger( L, 2 );
     const char *name = lstate_checkstring( L, 3 );
-    const char *bin = lstate_checkstring( L, 4 );
+    const char *bin = LAS_CHK_BINNAME( L, 4 );
     as_status rc;
     as_error err;
+    
+    if( !bin ){
+        return luaL_argerror( L, 4, LAS_ERR_BIN_NAME );
+    }
     
     switch( type ){
         case LAS_IDX_INTEGER:
@@ -923,11 +937,11 @@ int las_ctx_alloc_lua( lua_State *L )
     nsset = lstate_checklstring( L, 3, &nsset_len );
     if( ns_len >= AS_NAMESPACE_MAX_SIZE ){
         lua_pushnil( L );
-        lua_pushfstring( L, "namespace length must be less than %d", AS_NAMESPACE_MAX_SIZE );
+        lua_pushliteral( L, LAS_ERR_NAMESPACE );
     }
     else if( nsset_len >= AS_SET_MAX_SIZE ){
         lua_pushnil( L );
-        lua_pushfstring( L, "set length must be less than %d", AS_SET_MAX_SIZE );
+        lua_pushliteral( L, LAS_ERR_SET );
     }
     else if( ( ctx = lua_newuserdata( L, sizeof( las_ctx_t ) ) ) ){
         ctx->ref_conn = lstate_ref( L, 1 );
@@ -970,7 +984,7 @@ static void define_constants( lua_State *L )
     lstate_num2tbl( L, "IDX_STRING", LAS_IDX_STRING );
 }
 
-int las_ctx_init( lua_State *L )
+void las_ctx_init( lua_State *L )
 {
     struct luaL_Reg mmethod[] = {
         { "__gc", gc_lua },
@@ -1001,19 +1015,12 @@ int las_ctx_init( lua_State *L )
         /* not yet implemented
         // query ops
         { "query", query_lua },
-        // UDF ops
-        { "udfPut", udf_put_lua },
-        { "udfGet", udf_get_lua },
-        { "udfList", udf_list_lua },
-        { "udfRemove", udf_remove_lua },
         */
         { NULL, NULL }
     };
     
     // define metatable
     lstate_definemt( L, LAS_CONTEXT_MT, mmethod, method, define_constants );
-    
-    return 1;
 }
 
 

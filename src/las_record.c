@@ -49,7 +49,6 @@ static int verify( lua_State *L, int ttype, int vtype, int depth, void *udata )
     {
         uint16_t *nbin = (uint16_t*)udata;
         const char *name = NULL;
-        size_t len = 0;
         
         // number of bin limit(UINT16_MAX) exceeded
         if( *nbin == UINT16_MAX ){
@@ -71,9 +70,8 @@ static int verify( lua_State *L, int ttype, int vtype, int depth, void *udata )
         }
         
         // check name length
-        name = lua_tolstring( L, -2, &len );
         // bin name length must be 1-AS_BIN_NAME_MAX_LEN
-        if( !len || len > AS_BIN_NAME_MAX_LEN ){
+        if( !( name = LAS_CHK_BINNAME( L, -2 ) ) ){
             return LSTATE_TBLREAD_ABRT;
         }
     }
@@ -105,7 +103,7 @@ static int newindex_lua( lua_State *L )
             {
                 lua_Integer ttl = lstate_checkinteger( L, 3 );
                 if( ttl > UINT32_MAX ){
-                    return luaL_error( L, "ttl must be 0-%d", UINT32_MAX );
+                    return luaL_error( L, LAS_ERR_TTL_RANGE );
                 }
                 lrec->ttl = (uint32_t)ttl;
             }
@@ -242,7 +240,7 @@ static int alloc_lua( lua_State *L )
         ttl = lstate_checkinteger( L, 3 );
         if( ttl > UINT32_MAX ){
             lua_pushnil( L );
-            lua_pushfstring( L, "ttl must be 0-%d", UINT32_MAX );
+            lua_pushliteral( L, LAS_ERR_TTL_RANGE );
             return 2;
         }
     }

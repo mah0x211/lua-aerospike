@@ -20,7 +20,7 @@
  *  THE SOFTWARE.
  *
  *
- *  las_udft.c
+ *  las_udf.c
  *  lua-aerospike
  *
  *  Created by Masatoshi Teruya on 2014/09/02.
@@ -182,10 +182,10 @@ static int alloc_lua( lua_State *L )
 
 static int gc_lua( lua_State *L )
 {
-    las_udf_t *ctx = (las_udf_t*)lua_touserdata( L, 1 );
+    las_udf_t *udf = (las_udf_t*)lua_touserdata( L, 1 );
     
     // release las_conn_t reference
-    lstate_unref( L, ctx->ref_conn );
+    lstate_unref( L, udf->ref_conn );
 
     return 0;
 }
@@ -193,7 +193,7 @@ static int gc_lua( lua_State *L )
 
 static int tostring_lua( lua_State *L )
 {
-    return TOSTRING_MT( L, LAS_CONTEXT_MT );
+    return TOSTRING_MT( L, LAS_UDF_MT );
 }
 
 
