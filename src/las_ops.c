@@ -299,7 +299,7 @@ static int gc_lua( lua_State *L )
 
 static int tostring_lua( lua_State *L )
 {
-    return TOSTRING_MT( L, LAS_CONTEXT_MT );
+    return TOSTRING_MT( L, LAS_OPERATION_MT );
 }
 
 
