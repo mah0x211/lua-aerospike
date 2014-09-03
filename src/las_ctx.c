@@ -115,8 +115,7 @@ static int put_lua( lua_State *L )
     else if( lua_gettop( L ) > 3 )
     {
         ttl = lstate_checkinteger( L, 4 );
-        if( lua_type( L, 4 ) != LUA_TNUMBER ||
-            ( ttl = lua_tointeger( L, 4 ) ) < -1 || ttl > UINT32_MAX ){
+        if( ttl < -1 || ttl > UINT32_MAX ){
             lua_pushboolean( L, 0 );
             lua_pushliteral( L, LAS_ERR_TTL_RANGE );
             return 2;
