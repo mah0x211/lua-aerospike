@@ -91,7 +91,10 @@ for _, v in ipairs( TESTS ) do
     costAll = costAll + cost;
     
     if ok then
-        success[#success+1] = file;
+        success[#success+1] = {
+            file = file,
+            cost = cost
+        };
         print( cl( fmtSuccess:format( file, cost ) ) );
     else
         -- remove cwd path
@@ -110,6 +113,17 @@ print( cl( ('%%{magenta}TIME: %f sec, TOTAL COST: %f sec\n'):format( sec, costAl
 print( cl( ('%%{green}SUCCESS: %d'):format( #success ) ) );
 print( cl( ('%%{red}FAILURE: %d'):format( #failure ) ) );
 print( '\t' .. table.concat( failure, '\n\t' ) );
+
+-- time rank
+print( '--------------------------------------------------------------------' );
+table.sort( success, function(a,b)
+    return a.cost > b.cost;
+end);
+for _, v in ipairs( success ) do
+    print( cl( ('%%{green}%f sec %%{reset}| %%{yellow}%s'):format( v.cost, v.file ) ) );
+end
+
 print( '--------------------------------------------------------------------' );
 print( '\n' );
+
 
