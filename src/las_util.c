@@ -386,7 +386,7 @@ static int set_tbl2asqry_where_range( lua_State *L, as_query *qry,
                                       const char *bin )
 {
     int nval = 0;
-    lua_Integer range[2];
+    lua_Integer range[2] = {0};
     
     lua_pushnil( L );
     while( lua_next( L, -2 ) )
