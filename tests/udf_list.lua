@@ -3,7 +3,8 @@ require('./helper');
 
 local UDF = require('./udf');
 
-print( 'list', inspect(assert(
+printUsage( 'udf:list' );
+print( '>>', inspect(assert(
     UDF:list()
 )));
 

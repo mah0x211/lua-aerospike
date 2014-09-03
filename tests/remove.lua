@@ -5,7 +5,8 @@ local CONTEXT = require('./context');
 local _, v;
 
 for _, v in ipairs( DATA.KEYS ) do
-    print( 'remove', v, assert(
+    printUsage( 'context:remove', v );
+    print( '>>', assert(
         CONTEXT:remove( v )
     ));
 end

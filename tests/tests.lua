@@ -10,6 +10,15 @@ local function unhookPrint()
     _G.print = printOrg;
 end
 
+local function noop()
+end
+
+local PRINT_HOOK = hookPrint;
+if _G.arg[1] then
+    PRINT_HOOK = noop;
+end
+
+
 local CWD = require('process').getcwd();
 local SEACHPATH = CWD .. '/?.lua;' .. package.path;
 local EXTENSION = '.lua';
@@ -25,6 +34,7 @@ local TESTS = {
     'get',
     'select',
     'exists',
+    'operation',
     'operate',
     'batchGet',
     'batchExists',
@@ -73,7 +83,7 @@ for _, v in ipairs( TESTS ) do
     file = ('%s%s'):format( v, EXTENSION );
     
     -- run test
-    hookPrint();
+    PRINT_HOOK();
     cost = os.clock();
     ok, err = pcall( require, './' .. v );
     unhookPrint();
@@ -88,6 +98,9 @@ for _, v in ipairs( TESTS ) do
         err = err:gsub( '/+', '/' ):sub( #CWD + 2 );
         failure[#failure+1] = err;
         print( cl( fmtFailure:format( file, cost, err ) ) );
+    end
+    if PRINT_HOOK ~= hookPrint then
+        print( '--------------------------------------------------------------------' );
     end
 end
 sec = os.clock() - sec;

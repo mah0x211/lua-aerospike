@@ -3,7 +3,8 @@ require('./helper');
 
 local CONTEXT = require('./context');
 
-print( 'scanBackground', inspect(assert(
+printUsage( 'context:scanBackground' );
+print( '>>', inspect(assert(
     CONTEXT:scanBackground()
 )));
 

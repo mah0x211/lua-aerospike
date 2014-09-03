@@ -3,7 +3,7 @@ require('./helper');
 
 local CONTEXT = require('./context');
 
-print( 'batchExists', inspect(assert(
+printUsage( 'context:batchExists', unpack( DATA.KEYS ) );
+print( '>>', inspect(assert(
     CONTEXT:batchExists( unpack( DATA.KEYS ) )
 )));
-

@@ -5,7 +5,8 @@ local UDF = require('./udf');
 local k, _;
 
 for k, _ in pairs( DATA.UDF ) do
-    print( 'get', k, inspect(assert(
+    printUsage( 'udf:get', k );
+    print( '>>', inspect(assert(
         UDF:get( k )
     )));
 end

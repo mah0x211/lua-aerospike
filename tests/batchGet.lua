@@ -3,7 +3,7 @@ require('./helper');
 
 local CONTEXT = require('./context');
 
-print( 'batchGet', unpack( DATA.KEYS ), inspect(assert(
+printUsage( 'context:batchGet', unpack( DATA.KEYS ) );
+print( '>>', inspect(assert(
     CONTEXT:batchGet( unpack( DATA.KEYS ) )
 )));
-

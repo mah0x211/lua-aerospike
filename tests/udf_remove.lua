@@ -5,7 +5,8 @@ local UDF = require('./udf');
 local k, _;
 
 for k, _ in pairs( DATA.UDF ) do
-    print( 'remove', k, inspect(assert(
+    printUsage( 'udf:remove', k )
+    print( '>>', inspect(assert(
         UDF:remove( k )
     )));
 end

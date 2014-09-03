@@ -5,7 +5,8 @@ local CONTEXT = require('./context');
 local _, v;
 
 for _, v in ipairs( DATA.KEYS ) do
-    print( 'select', v, inspect(assert(
+    printUsage( 'context:select', v, unpack( DATA.SELECT ) );
+    print( '>>', inspect(assert(
         CONTEXT:select( v, unpack( DATA.SELECT ) )
     )));
 end

@@ -5,7 +5,9 @@ local CONTEXT = require('./context');
 local _, v;
 
 for _, v in ipairs( DATA.KEYS ) do
-    print( 'get', v, inspect(assert(
+    printUsage( 'context:get', v );
+    print( '>>', inspect(assert(
         CONTEXT:get( v )
     )));
 end
+

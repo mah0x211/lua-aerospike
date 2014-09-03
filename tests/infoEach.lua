@@ -5,7 +5,10 @@ local CONTEXT = require('./context');
 local _, v;
 
 for _, v in ipairs( DATA.INFOREQ ) do
-    print( 'infoEach', v, inspect(assert(
+    printUsage( 'context:infoEach', v );
+    print( '>>', inspect(assert(
         CONTEXT:infoEach( v )
     )));
+    
 end
+

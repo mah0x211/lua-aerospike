@@ -5,7 +5,8 @@ local CONTEXT = require('./context');
 local _, v;
 
 for _, v in ipairs( DATA.KEYS ) do
-    print( 'apply', v, 'module: ' .. DATA.APPLY.module .. ' func: ' .. DATA.APPLY.func .. ' | result:', inspect(assert(
+    printUsage( 'context:apply', v, DATA.APPLY.module, DATA.APPLY.func );
+    print( '>>', inspect(assert(
         CONTEXT:apply( v, DATA.APPLY.module, DATA.APPLY.func, DATA.APPLY.args )
     )));
 end

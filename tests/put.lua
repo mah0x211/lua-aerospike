@@ -6,7 +6,8 @@ local _, v;
 
 for _, v in ipairs( DATA.KEYS ) do
     DATA.DATA.c = DATA.DATA.c + 1;
-    print( 'put', v, assert(
+    printUsage( 'context:put', v, DATA.DATA, DATA.TTL );
+    print( '>>', assert(
         CONTEXT:put( v, DATA.DATA, DATA.TTL )
     ));
 end

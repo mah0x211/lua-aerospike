@@ -1,6 +1,6 @@
 local keys = {};
 local i;
-for i = 1, 1 do
+for i = 1, 3 do
     keys[#keys+1] = 'test-key' .. i;
 end
 
