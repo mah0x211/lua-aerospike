@@ -64,6 +64,7 @@ CHECK_TABLE:
         
         rc = callback( L, ttype & LUA_TTABLE_HASHLIST, vtype, depth, udata );
         if( rc != LSTATE_TBLREAD_NEXT ){
+            bitvec_dealloc( &bv );
             return rc;
         }
         else if( vtype == LUA_TTABLE ){
@@ -84,6 +85,8 @@ CHECK_REMAIN:
         ttype = bitvec_get( &bv, pos ) | ( bitvec_get( &bv, pos + 1 ) << 1 );
         goto CHECK_REMAIN;
     }
+    
+    bitvec_dealloc( &bv );
     
     return LSTATE_TBLREAD_DONE;
 }
