@@ -40,7 +40,7 @@ static int context_lua( lua_State *L )
 static int close_lua( lua_State *L )
 {
     int rv = 1;
-    las_conn_t *conn = luaL_checkudata( L, 1, LAS_CONNECT_MT );
+    las_conn_t *conn = luaL_checkudata( L, 1, LAS_CONNECTION_MT );
     as_error err;
     
     if( aerospike_close( conn->as, &err ) == AEROSPIKE_OK ){
@@ -99,7 +99,7 @@ static int alloc_lua( lua_State *L )
             
             if( aerospike_connect( conn->as, &err ) == AEROSPIKE_OK ){
                 conn->connected = 1;
-                lstate_setmetatable( L, LAS_CONNECT_MT );
+                lstate_setmetatable( L, LAS_CONNECTION_MT );
                 return 1;
             }
             
@@ -135,7 +135,7 @@ static int gc_lua( lua_State *L )
 
 static int tostring_lua( lua_State *L )
 {
-    return TOSTRING_MT( L, LAS_CONNECT_MT );
+    return TOSTRING_MT( L, LAS_CONNECTION_MT );
 }
 
 
@@ -152,7 +152,7 @@ LUALIB_API int luaopen_aerospike_connect( lua_State *L )
         { NULL, NULL }
     };
     
-    lstate_definemt( L, LAS_CONNECT_MT, mmethod, method, NULL );
+    lstate_definemt( L, LAS_CONNECTION_MT, mmethod, method, NULL );
     // add methods
     lua_pushcfunction( L, alloc_lua );
     

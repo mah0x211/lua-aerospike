@@ -1073,7 +1073,7 @@ int las_ctx_alloc_lua( lua_State *L )
     const char *nsset = NULL;
     
     // check arguments
-    luaL_checkudata( L, 1, LAS_CONNECT_MT );
+    luaL_checkudata( L, 1, LAS_CONNECTION_MT );
     // check namespace
     ns = lstate_checklstring( L, 2, &ns_len );
     // check setname

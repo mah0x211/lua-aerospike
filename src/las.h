@@ -40,7 +40,7 @@
 #include "las_util.h"
 
 // define module names
-#define LAS_CONNECT_MT      "aerospike.connect"
+#define LAS_CONNECTION_MT   "aerospike.connection"
 #define LAS_UDF_MT          "aerospike.udf"
 #define LAS_CONTEXT_MT      "aerospike.context"
 #define LAS_OPERATION_MT    "aerospike.operation"

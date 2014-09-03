@@ -167,7 +167,7 @@ static int alloc_lua( lua_State *L )
     las_udf_t *udf = NULL;
     
     // arg#1 connection instance
-    luaL_checkudata( L, 1, LAS_CONNECT_MT );
+    luaL_checkudata( L, 1, LAS_CONNECTION_MT );
     if( ( udf = lua_newuserdata( L, sizeof( las_udf_t ) ) ) ){
         udf->ref_conn = lstate_ref( L, 1 );
         lstate_setmetatable( L, LAS_UDF_MT );
