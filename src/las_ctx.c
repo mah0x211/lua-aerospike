@@ -997,7 +997,7 @@ static bool query_cb( const as_val *val, void *udata )
 static int query_lua( lua_State *L )
 {
     int rv = 1;
-    int argc = lua_gettop( L );
+    const int argc = lua_gettop( L );
     las_conn_t *conn = NULL;
     las_ctx_t *ctx = get_context( L, &conn );
     as_query *qry = lstate_tbl2asqry( L, ctx->ns, ctx->set );
@@ -1052,7 +1052,7 @@ static int query_lua( lua_State *L )
         rv++;
     }
     
-    if( argc > 1 ){
+    if( argc > 2 ){
         as_arraylist_destroy( &apply.args );
     }
     as_query_destroy( qry );
