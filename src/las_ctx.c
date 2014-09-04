@@ -443,16 +443,17 @@ static int apply_lua( lua_State *L )
     }
     switch( set_apply_args( L, argc, &apply, 3 ) )
     {
+        // check error
         // arg#3 module
         case LAS_APPLY_EMODULE:
             las_key_dispose( &lkey );
             luaL_checktype( L, 3, LUA_TSTRING );
-        break;
+            return 1;
         // arg#4 function
         case LAS_APPLY_EFUNCTION:
             las_key_dispose( &lkey );
             luaL_checktype( L, 4, LUA_TSTRING );
-        break;
+            return 1;
         // failed to as_arraylist_init
         case LAS_APPLY_ESYS:
             las_key_dispose( &lkey );
@@ -1014,6 +1015,7 @@ static int query_lua( lua_State *L )
     {
         switch( set_apply_args( L, argc, &apply, 3 ) )
         {
+            // check error
             // arg#3 module
             case LAS_APPLY_EMODULE:
                 as_query_destroy( qry );
