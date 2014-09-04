@@ -1,6 +1,7 @@
 require('process').chdir( (arg[0]):match( '^(.+[/])[^/]+%.lua$' ) );
 require('./helper');
 local cl = require('ansicolors');
+local gettimeofday = require('process').gettimeofday;
 
 local printOrg = print;
 local function hookPrint()
@@ -53,7 +54,7 @@ local TESTS = {
 local fmtSuccess, fmtFailure;
 -- setup output format
 do
-    local fmt = '%%{yellow}TEST %-%ds cost %f sec %%{reset}| ';
+    local fmt = '%%{yellow}TEST %-%ds cost %20f sec %%{reset}| ';
     local len = 0;
     for _, v in ipairs( TESTS ) do
         if ( #v + #EXTENSION ) > len then
@@ -61,7 +62,7 @@ do
         end
     end
 
-    fmt = '%%{yellow}TEST %-' .. len .. 's %%{cyan}%f sec %%{reset} ';
+    fmt = '%%{yellow}TEST %-' .. len .. 's %%{cyan}%12f sec %%{reset} ';
     fmtSuccess = fmt .. '%%{green}SUCCESS';
     fmtFailure = fmt .. '%%{red}FAILURE - %s';
 end
@@ -77,17 +78,17 @@ print( cl( ('%%{magenta}START %d TESTS'):format( #TESTS ) ) );
 print( '====================================================================' );
 
 costAll = 0;
-sec = os.clock();
+sec = gettimeofday();
 for _, v in ipairs( TESTS ) do
     -- append file extension
     file = ('%s%s'):format( v, EXTENSION );
     
     -- run test
     PRINT_HOOK();
-    cost = os.clock();
+    cost = gettimeofday();
     ok, err = pcall( require, './' .. v );
     unhookPrint();
-    cost = os.clock() - cost;
+    cost = gettimeofday() - cost;
     costAll = costAll + cost;
     
     if ok then
@@ -106,7 +107,7 @@ for _, v in ipairs( TESTS ) do
         print( '--------------------------------------------------------------------' );
     end
 end
-sec = os.clock() - sec;
+sec = gettimeofday() - sec;
 
 print( '====================================================================' );
 print( cl( ('%%{magenta}TIME: %f sec, TOTAL COST: %f sec\n'):format( sec, costAll ) ) );
@@ -120,7 +121,7 @@ table.sort( success, function(a,b)
     return a.cost > b.cost;
 end);
 for _, v in ipairs( success ) do
-    print( cl( ('%%{green}%f sec %%{reset}| %%{yellow}%s'):format( v.cost, v.file ) ) );
+    print( cl( ('%%{green}%-10f sec %%{reset}| %%{yellow}%s'):format( v.cost, v.file ) ) );
 end
 
 print( '--------------------------------------------------------------------' );
