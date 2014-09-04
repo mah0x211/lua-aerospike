@@ -1018,12 +1018,12 @@ static int query_lua( lua_State *L )
             case LAS_APPLY_EMODULE:
                 as_query_destroy( qry );
                 luaL_checktype( L, 3, LUA_TSTRING );
-            break;
+                return 1;
             // arg#4 function
             case LAS_APPLY_EFUNCTION:
                 as_query_destroy( qry );
                 luaL_checktype( L, 4, LUA_TSTRING );
-            break;
+                return 1;
             // failed to as_arraylist_init
             case LAS_APPLY_ESYS:
                 as_query_destroy( qry );
