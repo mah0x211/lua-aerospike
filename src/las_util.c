@@ -128,12 +128,12 @@ static as_val *set_tbl2asmap( lua_State *L, const uint32_t len )
                     rc = as_stringmap_set( map, name, val );
                 break;
                 
-                // unsupported value
+                // unsupported data type
                 default:
                     as_map_destroy( map );
                     lua_pushboolean( L, 0 );
-                    lua_pushfstring( L, "unsupported value type %s at field %s",
-                                     lua_typename( L, lua_type( L, -1 ) ), name );
+                    lua_pushfstring( L, "unsupported data type %s at field %s",
+                                     lua_typename( L, lua_type( L, -2 ) ), name );
                     return NULL;
             }
             lua_pop( L, 1 );
@@ -190,8 +190,8 @@ static as_val *set_tbl2asarr( lua_State *L, const uint32_t len )
                 default:
                     as_arraylist_destroy( list );
                     lua_pushboolean( L, 0 );
-                    lua_pushfstring( L, "unsupported value type %s at index %u",
-                                     lua_typename( L, lua_type( L, -1 ) ), idx );
+                    lua_pushfstring( L, "unsupported data type %s at index %u",
+                                     lua_typename( L, lua_type( L, -2 ) ), idx );
                     return NULL;
             }
             lua_pop( L, 1 );
@@ -306,7 +306,7 @@ as_record *lstate_tbl2asrec( lua_State *L )
             default:
                 lua_pushboolean( L, 0 );
                 lua_pushfstring( L, "%s = <%s> is unsupported data type",
-                                 name, lua_typename( L , lua_type( L, -1 ) ) );
+                                 name, lua_typename( L , lua_type( L, -2 ) ) );
                 as_record_destroy( rec );
                 return NULL;
         }
