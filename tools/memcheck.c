@@ -32,6 +32,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include "../src/las.h"
 
 int main (int argc, const char * argv[])
 {
@@ -39,21 +40,28 @@ int main (int argc, const char * argv[])
     lua_State *L = NULL;
     const char *path = NULL;;
     
-    
     if( !script ){
-        printf("usage: memcheck <path/to/script.lua>\n");
+        printf("script path argument undefined\n");
         return 0;
     }
     
     if( ( path = getenv( "LUA_PATH" ) ) ){
         setenv( "LUA_PATH", path, 1 );
     }
-    if( ( path = getenv( "LUA_CPATH" ) ) ){
+    else if( ( path = getenv( "LUA_CPATH" ) ) ){
         setenv( "LUA_CPATH", path, 1 );
     }
     
     L = luaL_newstate();
     luaL_openlibs( L );
+    // add aerospike module to package.loaded
+    lua_getglobal( L, "package" );
+    lua_getfield( L, -1, "loaded" );
+    lua_pushstring( L, "aerospike");
+    luaopen_aerospike( L );
+    lua_rawset( L, -3 );
+    lua_pop( L, 2 );
+    
     
     lua_createtable( L, 1, 0 );
     lua_pushstring( L, script );
@@ -69,4 +77,5 @@ int main (int argc, const char * argv[])
     
     return 0;
 }
+
 

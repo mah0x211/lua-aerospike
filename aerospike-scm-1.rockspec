@@ -33,7 +33,8 @@ build = {
         CFLAGS          = "$(CFLAGS)",
         WARNINGS        = "-Wall -Wno-trigraphs -Wmissing-field-initializers -Wreturn-type -Wmissing-braces -Wparentheses -Wno-switch -Wunused-function -Wunused-label -Wunused-parameter -Wunused-variable -Wunused-value -Wuninitialized -Wunknown-pragmas -Wshadow -Wsign-compare",
         CPPFLAGS        = "-I$(LUA_INCDIR) -I$(AEROSPIKE_INCDIR) -I$(AEROSPIKE_INCDIR)/ck",
-        LDFLAGS         = "$(LIBFLAG) $(AEROSPIKE_LIBDIR)/libaerospike.a -lssl -lcrypto -lpthread",
+        LDFLAGS         = "$(LIBFLAG)",
+        LIBS            = "$(AEROSPIKE_LIBDIR)/libaerospike.a -lssl -lcrypto -lpthread -lz",
         LIB_EXTENSION   = "$(LIB_EXTENSION)"
     },
     install_variables = {

@@ -13,11 +13,11 @@ all: $(TARGET) $(MEMCHECK)
 	$(CC) $(CFLAGS) $(WARNINGS) $(CPPFLAGS) -o $@ -c $<
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS) $(PLATFORM_LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(PLATFORM_LDFLAGS)
 
 
 $(MEMCHECK): $(OBJ)
-	$(CC) -o $@ $^ -llua
+	$(CC) -o $@ $(OBJS) $^ -llua $(LIBS) $(PLATFORM_LDFLAGS)
 
 
 install:
