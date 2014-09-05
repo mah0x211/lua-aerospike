@@ -152,7 +152,7 @@ LUALIB_API int luaopen_aerospike_connect( lua_State *L )
         { NULL, NULL }
     };
     
-    lstate_definemt( L, LAS_CONNECTION_MT, mmethod, method, NULL );
+    lstate_definemt( L, LAS_CONNECTION_MT, mmethod, method );
     // add methods
     lua_pushcfunction( L, alloc_lua );
     

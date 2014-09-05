@@ -387,7 +387,7 @@ LUALIB_API int luaopen_aerospike_operation( lua_State *L )
     };
     
     // define metatable
-    lstate_definemt( L, LAS_OPERATION_MT, mmethod, method, NULL );
+    lstate_definemt( L, LAS_OPERATION_MT, mmethod, method );
     // add methods
     lua_pushcfunction( L, alloc_lua );
 

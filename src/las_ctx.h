@@ -33,6 +33,9 @@
 #include "las.h"
 #include "las_connect.h"
 
+#define LAS_IDX_INTEGER 1
+#define LAS_IDX_STRING  2
+
 typedef struct {
     const char ns[AS_NAMESPACE_MAX_SIZE];
     const char set[AS_SET_MAX_SIZE];

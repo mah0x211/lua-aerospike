@@ -212,7 +212,7 @@ LUALIB_API int luaopen_aerospike_udf( lua_State *L )
         { NULL, NULL }
     };
     
-    lstate_definemt( L, LAS_UDF_MT, mmethod, method, NULL );
+    lstate_definemt( L, LAS_UDF_MT, mmethod, method );
     // add methods
     lua_pushcfunction( L, alloc_lua );
     

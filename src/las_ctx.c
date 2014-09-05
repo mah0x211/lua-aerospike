@@ -1045,8 +1045,6 @@ static int infoeach_lua( lua_State *L )
 
 
 // MARK: index operations
-#define LAS_IDX_INTEGER 1
-#define LAS_IDX_STRING  2
 
 static int indexcreate_lua( lua_State *L )
 {
@@ -1074,7 +1072,7 @@ static int indexcreate_lua( lua_State *L )
                                                 ctx->set, bin, name );
         break;
         default:
-            return luaL_argerror( L, 4, "index type must be IDX_INTEGER | IDX_STRING" );
+            return luaL_argerror( L, 4, "index type must be IDX_<INTEGER|STRING>" );
     }
     
     if( rc == AEROSPIKE_OK ){
@@ -1262,13 +1260,6 @@ static int tostring_lua( lua_State *L )
     return TOSTRING_MT( L, LAS_CONTEXT_MT );
 }
 
-static void define_constants( lua_State *L )
-{
-    // set constants
-    // types for create index
-    lstate_num2tbl( L, "IDX_INTEGER", LAS_IDX_INTEGER );
-    lstate_num2tbl( L, "IDX_STRING", LAS_IDX_STRING );
-}
 
 void las_ctx_init( lua_State *L )
 {
@@ -1304,7 +1295,7 @@ void las_ctx_init( lua_State *L )
     };
     
     // define metatable
-    lstate_definemt( L, LAS_CONTEXT_MT, mmethod, method, define_constants );
+    lstate_definemt( L, LAS_CONTEXT_MT, mmethod, method );
 }
 
 

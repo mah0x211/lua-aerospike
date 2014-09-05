@@ -180,8 +180,7 @@ typedef void (*lstate_definemt_cb)( lua_State* );
 
 static inline void lstate_definemt( lua_State *L, const char *tname,
                                     struct luaL_Reg mmethod[],
-                                    struct luaL_Reg method[],
-                                    lstate_definemt_cb callback )
+                                    struct luaL_Reg method[] )
 {
     int i;
     
@@ -197,9 +196,7 @@ static inline void lstate_definemt( lua_State *L, const char *tname,
     for( i = 0; method[i].name; i++ ){
         lstate_fn2tbl( L, method[i].name, method[i].func );
     }
-    if( callback ){
-        callback( L );
-    }
+    
     lua_rawset( L, -3 );
     lua_pop( L, 1 );
 }

@@ -101,7 +101,7 @@
 
 // scan option errors
 #define LAS_ERR_SCANOPT_PRIORITY \
-    "opt.priority must be aerospike.SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>"
+    "opt.priority must be SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>"
 
 #define LAS_ERR_SCANOPT_PERCENT \
     "opt.percent must be 1 to 100(default)"

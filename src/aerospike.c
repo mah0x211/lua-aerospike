@@ -54,6 +54,16 @@ LUALIB_API int luaopen_aerospike( lua_State *L )
     //luaopen_aerospike_record( L );
     //lua_setfield( L, -2, "record" );
     
+    // constants
+    // types for create index
+    lstate_num2tbl( L, "IDX_INTEGER", LAS_IDX_INTEGER );
+    lstate_num2tbl( L, "IDX_STRING", LAS_IDX_STRING );
+    // scan priorities
+    lstate_num2tbl( L, "SCAN_PRIORITY_AUTO", AS_SCAN_PRIORITY_AUTO );
+    lstate_num2tbl( L, "SCAN_PRIORITY_LOW", AS_SCAN_PRIORITY_LOW );
+    lstate_num2tbl( L, "SCAN_PRIORITY_MEDIUM", AS_SCAN_PRIORITY_MEDIUM );
+    lstate_num2tbl( L, "SCAN_PRIORITY_HIGH", AS_SCAN_PRIORITY_HIGH );
+    
     return 1;
 }
 
