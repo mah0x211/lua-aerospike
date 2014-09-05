@@ -3,8 +3,6 @@ SRCS=$(wildcard $(SRCDIR)/*.c)
 OBJS=$(SRCS:.c=.o)
 
 MEMCHECK=tools/memcheck
-SRC=tools/memcheck.c
-OBJ=tools/memcheck.o
 
 
 all: $(TARGET) $(MEMCHECK)
@@ -16,12 +14,15 @@ $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(PLATFORM_LDFLAGS)
 
 
-$(MEMCHECK): $(OBJ)
+$(MEMCHECK).o: $(MEMCHECK).c
+	$(CC) -O0 -g $(WARNINGS) $(CPPFLAGS) -o $@ -c $<
+
+$(MEMCHECK): $(MEMCHECK).o
 	$(CC) -o $@ $(OBJS) $^ -llua $(LIBS) $(PLATFORM_LDFLAGS)
 
 
 install:
 	mkdir -p $(LIBDIR)
 	cp $(TARGET) $(LIBDIR)
-	rm -f $(OBJS) $(TARGET) $(OBJ)
+	rm -f $(OBJS) $(TARGET) $(MEMCHECK).o
 
