@@ -5,6 +5,6 @@ local CONTEXT = require('./context');
 
 printUsage( 'context:scanBackground' );
 print( '>>', inspect(assert(
-    CONTEXT:scanBackground()
+    CONTEXT:scanBackground( DATA.SCAN_OPT )
 )));
 

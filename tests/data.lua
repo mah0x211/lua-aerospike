@@ -17,6 +17,12 @@ end
 
 ]];
 
+local SCAN_APPLY_UDF = [[
+function mytransform(rec)
+    rec['b'] = 'add ' .. rec['a'];
+    aerospike:update(rec)
+end
+]];
 
 return {
     NAMESPACE = 'test',
@@ -38,7 +44,26 @@ return {
         ['sample_udf1.lua'] = UDF_TMPL:gsub( '$NAME', 'hello1' ) ..
                               UDF_TMPL:gsub( '$NAME', 'world1' ),
         ['sample_udf2.lua'] = UDF_TMPL:gsub( '$NAME', 'hello2' ) ..
-                              UDF_TMPL:gsub( '$NAME', 'world2' )
+                              UDF_TMPL:gsub( '$NAME', 'world2' ),
+        ['scan_apply_udf.lua'] = SCAN_APPLY_UDF
+    },
+    SCAN_OPT = {
+        priority = aerospike.SCAN_PRIORITY_AUTO,
+        --percent = 99,
+        --concurrent = true,
+        apply = {
+            module = 'scan_apply_udf',
+            func = 'mytransform',
+            args = {
+                'a1', 'a2', 'a3', {
+                    b1 = {
+                        x = 'x',
+                        y = 'y'
+                    },
+                    b2 = 'zp'
+                }
+            }
+        }
     },
     APPLY = {
         module = 'sample_udf1',

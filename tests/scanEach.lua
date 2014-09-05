@@ -3,8 +3,8 @@ require('./helper');
 
 local CONTEXT = require('./context');
 
-printUsage( 'context:scanEach', nil, unpack( DATA.SELECT ) );
+printUsage( 'context:scanEach', DATA.SCAN_OPT, unpack( DATA.SELECT ) );
 print( '>>', inspect(assert(
-    CONTEXT:scanEach( nil, unpack( DATA.SELECT ) )
+    CONTEXT:scanEach( DATA.SCAN_OPT, unpack( DATA.SELECT ) )
 )));
 
