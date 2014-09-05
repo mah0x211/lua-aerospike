@@ -523,6 +523,7 @@ static int las_batch_init( lua_State *L, las_batch_t *lbatch, int exists )
     for(; idx <= argc; idx++ )
     {
         if( lua_type( L, idx ) != LUA_TSTRING ){
+            lbatch->batch.keys.size = idx - 1;
             as_batch_destroy( &lbatch->batch );
             lua_pushnil( L );
             lua_pushfstring( L, "key#%d must be type of string", idx-1 );
