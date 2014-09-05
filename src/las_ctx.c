@@ -367,21 +367,25 @@ static int set_apply_args( lua_State *L, const int argc,
     const int nargs = argc - function_idx;
     int args_idx = idx + 2;
     as_val *val = NULL;
+    size_t len = 0;
 
     // arg#3 module
-    if( lua_type( L, module_idx ) != LUA_TSTRING ){
+    if( lua_type( L, module_idx ) != LUA_TSTRING ||
+        !( apply->module = lua_tolstring( L, module_idx, &len ) ) ||
+        len > AS_UDF_MODULE_MAX_LEN ){
         return LAS_APPLY_EMODULE;
     }
     // arg#4 function
-    else if( lua_type( L, function_idx ) != LUA_TSTRING ){
+    else if( lua_type( L, function_idx ) != LUA_TSTRING ||
+             !( apply->function = lua_tolstring( L, function_idx, &len ) ) ||
+             len > AS_UDF_FUNCTION_MAX_LEN ){
         return LAS_APPLY_EFUNCTION;
     }
-    apply->module = lua_tostring( L, module_idx );
-    apply->function = lua_tostring( L, function_idx );
     // arg#5 arguments for function
-    if( !as_arraylist_init( &apply->args, nargs, 0 ) ){
+    else if( !as_arraylist_init( &apply->args, nargs, 0 ) ){
         return LAS_APPLY_ESYS;
     }
+    
     // set arguments
     for(; args_idx <= argc; args_idx++ )
     {
