@@ -1218,21 +1218,28 @@ int las_ctx_alloc_lua( lua_State *L )
     // check namespace
     ns = lstate_checklstring( L, 2, &ns_len );
     // check setname
-    nsset = lstate_checklstring( L, 3, &nsset_len );
+    if( !lua_isnoneornil( L, 3 ) ){
+        nsset = lstate_checklstring( L, 3, &nsset_len );
+    }
+    
     if( ns_len >= AS_NAMESPACE_MAX_SIZE ){
         lua_pushnil( L );
         lua_pushliteral( L, LAS_ERR_NAMESPACE );
     }
-    else if( nsset_len >= AS_SET_MAX_SIZE ){
+    else if( nsset && nsset_len >= AS_SET_MAX_SIZE ){
         lua_pushnil( L );
         lua_pushliteral( L, LAS_ERR_SET );
     }
-    else if( ( ctx = lua_newuserdata( L, sizeof( las_ctx_t ) ) ) ){
+    else if( ( ctx = lua_newuserdata( L, sizeof( las_ctx_t ) ) ) )
+    {
         ctx->ref_conn = lstate_ref( L, 1 );
         as_policies_init( &ctx->policies );
         // copy string+null-terminator
         memcpy( (void*)ctx->ns, ns, ns_len + 1 );
-        memcpy( (void*)ctx->set, nsset, nsset_len + 1 );
+        // set can be null
+        if( nsset ){
+            memcpy( (void*)ctx->set, nsset, nsset_len + 1 );
+        }
         lstate_setmetatable( L, LAS_CONTEXT_MT );
         return 1;
     }
