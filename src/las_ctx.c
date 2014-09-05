@@ -644,18 +644,166 @@ static int batchexists_lua( lua_State *L )
 typedef struct {
     aerospike *as;
     as_policy_scan *policy;
+    as_policy_info *policy_info;
     lua_State *L;
     as_scan scan;
     int nitem;
-} las_scaneach_t;
+} las_scan_t;
+
+
+static int las_scan_init( lua_State *L, las_scan_t *lscan,
+                          las_apply_args_t *apply )
+{
+    las_conn_t *conn = NULL;
+    las_ctx_t *ctx = get_context( L, &conn );
+    const char *errstr = NULL;
+    
+    if( !as_scan_init( &lscan->scan, ctx->ns, ctx->set ) ){
+        lua_pushnil( L );
+        lua_pushstring( L, strerror( errno ) );
+        return 2;
+    }
+    // check option table: 2
+    else if( !lua_isnoneornil( L, 2 ) )
+    {
+        lua_Integer val = 0;
+        
+        if( lua_type( L, 2 ) != LUA_TTABLE  ){
+            as_scan_destroy( &lscan->scan );
+            luaL_checktype( L, 2, LUA_TTABLE );
+            return 1;
+        }
+        
+        // check priority
+        lua_pushstring( L, "priority" );
+        lua_rawget( L, 2 );
+        if( !lua_isnoneornil( L, -1 ) )
+        {
+            if( lua_type( L, -1 ) != LUA_TNUMBER ){
+                errstr = "opt.priority must be context.SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>";
+                goto INIT_FAILED;
+            }
+            val = lua_tointeger( L, -1 );
+            switch( val ) {
+                case AS_SCAN_PRIORITY_AUTO:
+                case AS_SCAN_PRIORITY_LOW:
+                case AS_SCAN_PRIORITY_MEDIUM:
+                case AS_SCAN_PRIORITY_HIGH:
+                break;
+                
+                default:
+                    errstr = "opt.priority must be context.SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>";
+                    goto INIT_FAILED;
+            }
+            as_scan_set_priority( &lscan->scan, (as_scan_priority)val );
+        }
+        lua_pop( L, 1 );
+        
+        // check percent
+        lua_pushstring( L, "percent" );
+        lua_rawget( L, 2 );
+        if( !lua_isnoneornil( L, -1 ) )
+        {
+            if( lua_type( L, -1 ) != LUA_TNUMBER ){
+                errstr = "opt.percent must be type of number";
+                goto INIT_FAILED;
+            }
+            val = lua_tointeger( L, -1 );
+            if( val < 0 ){
+                as_scan_set_percent( &lscan->scan, 0 );
+            }
+            // ignore: default is 100
+            else if( val < 100 ){
+                as_scan_set_percent( &lscan->scan, (uint8_t)val );
+            }
+        }
+        lua_pop( L, 1 );
+        
+        // check concurrent
+        lua_pushstring( L, "concurrent" );
+        lua_rawget( L, 2 );
+        if( !lua_isnoneornil( L, -1 ) )
+        {
+            if( lua_type( L, -1 ) != LUA_TBOOLEAN ){
+                errstr = "opt.concurrent must be type of boolean";
+                goto INIT_FAILED;
+            }
+            as_scan_set_concurrent( &lscan->scan, lua_toboolean( L, -1 ) );
+        }
+        lua_pop( L, 1 );
+        
+        // check appy
+        if( apply )
+        {
+            // check concurrent
+            lua_pushstring( L, "apply" );
+            lua_rawget( L, 2 );
+            if( !lua_isnoneornil( L, -1 ) )
+            {
+                const int top = lua_gettop( L );
+                
+                if( lua_type( L, -1 ) != LUA_TTABLE ){
+                    errstr = "opt.apply must be type of table";
+                    goto INIT_FAILED;
+                }
+                lua_pushstring( L, "module" );
+                lua_rawget( L, top );
+                lua_pushstring( L, "func" );
+                lua_rawget( L, top );
+                lua_pushstring( L, "args" );
+                lua_rawget( L, top );
+                switch( set_apply_args( L, top + 3, apply, top + 1 ) )
+                {
+                    // check error
+                    // arg#3 module
+                    case LAS_APPLY_EMODULE:
+                        errstr = "opt.appy.module error";
+                        goto INIT_FAILED;
+                    // arg#4 function
+                    case LAS_APPLY_EFUNCTION:
+                        errstr = "opt.appy.function error";
+                        goto INIT_FAILED;
+                    // failed to as_arraylist_init
+                    case LAS_APPLY_ESYS:
+                        errstr = strerror( errno );
+                        goto INIT_FAILED;
+                    // arg#5 arguments for function
+                    case LAS_APPLY_EARGS:
+                        errstr = lua_tostring( L, -1 );
+                        goto INIT_FAILED;
+                }
+                
+                as_scan_apply_each( &lscan->scan, apply->module, apply->function,
+                                    (as_list*)&apply->args );
+                lua_settop( L, top );
+            }
+            lua_pop( L, 1 );
+        }
+    }
+    
+    // init
+    lscan->as = conn->as;
+    lscan->L = L;
+    lscan->policy = &ctx->policies.scan;
+    lscan->policy_info = &ctx->policies.info;
+    lscan->nitem = 0;
+
+    return 0;
+
+INIT_FAILED:
+    as_scan_destroy( &lscan->scan );
+    lua_pushnil( L );
+    lua_pushstring( L, errstr );
+    return 2;
+}
 
 
 static bool scaneach_cb( const as_val *val, void *udata )
 {
     as_record *rec = as_record_fromval( val );
-    las_scaneach_t *seach = (las_scaneach_t*)udata;
-    lua_State *L = seach->L;
-
+    las_scan_t *lscan = (las_scan_t*)udata;
+    lua_State *L = lscan->L;
+    
     if( rec )
     {
         as_digest *digest = as_key_digest( &rec->key );
@@ -672,66 +820,60 @@ static bool scaneach_cb( const as_val *val, void *udata )
             lstate_asrec2tbl( L, rec );
             lua_rawset( L, -3 );
         }
-        lua_rawseti( L, -2, ++(seach->nitem) );
+        lua_rawseti( L, -2, ++(lscan->nitem) );
         return true;
     }
     
     return false;
 }
 
+
 static int scaneach_lua( lua_State *L )
 {
-    int argc = lua_gettop( L );
-    las_conn_t *conn = NULL;
-    las_ctx_t *ctx = get_context( L, &conn );
-    las_scaneach_t seach = {
-        .as = conn->as,
-        .L = L,
-        .policy = &ctx->policies.scan,
-        .nitem = 0
-    };
-    int rv = 2;
+    const int argc = lua_gettop( L );
+    las_scan_t lscan;
+    int rv = las_scan_init( L, &lscan, NULL );
     as_error err;
     
-    
-    if( !as_scan_init( &seach.scan, ctx->ns, ctx->set ) ){
-        lua_pushnil( L );
-        lua_pushstring( L, strerror( errno ) );
-        return 2;
+    // got init error
+    if( rv ){
+        return rv;
     }
-    // option table: 2 (not yet)
-    
-    // bin names: 3...N
-    if( argc < 3 ){
-        as_scan_set_nobins( &seach.scan, true );
-    }
-    else if( !as_scan_select_init( &seach.scan, (uint16_t)argc - 2 ) ){
-        as_scan_destroy( &seach.scan );
-        lua_pushnil( L );
-        lua_pushstring( L, strerror( errno ) );
-        return 2;
-    }
-    // set select bin names
-    else
+    else if( argc > 2 )
     {
-        int idx = 3;
-        const char *binname = NULL;
-        
-        for(; idx <= argc; idx++ )
+        // bin names: 2...N
+        if( argc < 3 ){
+            as_scan_set_nobins( &lscan.scan, true );
+        }
+        else if( !as_scan_select_init( &lscan.scan, (uint16_t)argc - 2 ) ){
+            as_scan_destroy( &lscan.scan );
+            lua_pushnil( L );
+            lua_pushstring( L, strerror( errno ) );
+            return 2;
+        }
+        // set select bin names
+        else
         {
-            if( !( binname = LAS_CHK_BINNAME( L, idx ) ) ){
-                as_scan_destroy( &seach.scan );
-                lua_pushnil( L );
-                lua_pushliteral( L, LAS_ERR_BIN_NAME );
-                return 2;
+            int idx = 3;
+            const char *binname = NULL;
+            
+            for(; idx <= argc; idx++ )
+            {
+                if( !( binname = LAS_CHK_BINNAME( L, idx ) ) ){
+                    as_scan_destroy( &lscan.scan );
+                    lua_pushnil( L );
+                    lua_pushliteral( L, LAS_ERR_BIN_NAME );
+                    return 2;
+                }
+                as_scan_select( &lscan.scan, binname );
             }
-            as_scan_select( &seach.scan, binname );
         }
     }
     
+    
     lua_newtable( L );
-    if( aerospike_scan_foreach( seach.as, &err, seach.policy, &seach.scan,
-                                scaneach_cb, (void*)&seach ) != AEROSPIKE_OK ){
+    if( aerospike_scan_foreach( lscan.as, &err, lscan.policy, &lscan.scan,
+                                scaneach_cb, (void*)&lscan ) != AEROSPIKE_OK ){
         lua_pop( L, 1 );
         lua_pushnil( L );
         lua_pushstring( L, err.message );
@@ -740,7 +882,7 @@ static int scaneach_lua( lua_State *L )
     else {
         rv = 1;
     }
-    as_scan_destroy( &seach.scan );
+    as_scan_destroy( &lscan.scan );
     
     return rv;
 }
@@ -748,24 +890,23 @@ static int scaneach_lua( lua_State *L )
 
 static int scanbackground_lua( lua_State *L )
 {
-    las_conn_t *conn = NULL;
-    las_ctx_t *ctx = get_context( L, &conn );
-    uint64_t scan_id = 0;
+    las_scan_t lscan;
+    las_apply_args_t apply;
+    int rv = las_scan_init( L, &lscan, &apply );
+    uint64_t sid = 0;
     as_error err;
-    as_scan scan;
     as_status status;
     as_scan_info info;
     
-    if( !as_scan_init( &scan, ctx->ns, ctx->set ) ){
-        lua_pushboolean( L, 0 );
-        lua_pushstring( L, strerror( errno ) );
-        return 2;
+    // got init error
+    if( rv ){
+        return rv;
     }
     
     // get background id
-    status = aerospike_scan_background( conn->as, &err, &ctx->policies.scan,
-                                        &scan, &scan_id );
-    as_scan_destroy( &scan );
+    status = aerospike_scan_background( lscan.as, &err, lscan.policy,
+                                        &lscan.scan, &sid );
+    as_scan_destroy( &lscan.scan );
     // got error
     if( status != AEROSPIKE_OK ){
         lua_pushboolean( L, 0 );
@@ -774,8 +915,7 @@ static int scanbackground_lua( lua_State *L )
     }
     
 RETRY_SCANINFO:
-    status = aerospike_scan_info( conn->as, &err, &ctx->policies.info, scan_id,
-                                  &info );
+    status = aerospike_scan_info( lscan.as, &err, lscan.policy_info, sid, &info );
     if( status != AEROSPIKE_OK ){
         lua_pushboolean( L, 0 );
         lua_pushstring( L, err.message );
