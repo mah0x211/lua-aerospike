@@ -363,8 +363,8 @@ static int set_apply_args( lua_State *L, const int argc,
                            las_apply_args_t *apply, const int idx )
 {
     const int module_idx = idx;
-    const int function_idx = idx + 1;
-    const int nargs = argc - function_idx;
+    const int func_idx = idx + 1;
+    const int nargs = argc - func_idx;
     int args_idx = idx + 2;
     as_val *val = NULL;
     size_t len = 0;
@@ -376,8 +376,8 @@ static int set_apply_args( lua_State *L, const int argc,
         return LAS_APPLY_EMODULE;
     }
     // arg#4 function
-    else if( lua_type( L, function_idx ) != LUA_TSTRING ||
-             !( apply->func = lua_tolstring( L, function_idx, &len ) ) ||
+    else if( lua_type( L, func_idx ) != LUA_TSTRING ||
+             !( apply->func = lua_tolstring( L, func_idx, &len ) ) ||
              len > AS_UDF_FUNCTION_MAX_LEN ){
         return LAS_APPLY_EFUNCTION;
     }
@@ -421,8 +421,8 @@ static int set_apply_args( lua_State *L, const int argc,
             default:
                 as_arraylist_destroy( &apply->args );
                 lua_pushnil( L );
-                lua_pushfstring( L, "arg#%d is not supported data type",
-                                 args_idx-1 );
+                lua_pushfstring( L, LAS_ERR_UDF_ARGUMENT "%s data",
+                                 lua_typename( L, lua_type( L, args_idx ) ) );
                 return LAS_APPLY_EARGS;
         }
     }
@@ -680,7 +680,7 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
         if( !lua_isnoneornil( L, -1 ) )
         {
             if( lua_type( L, -1 ) != LUA_TNUMBER ){
-                errstr = "opt.priority must be context.SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>";
+                errstr = LAS_ERR_SCANOPT_PRIORITY;
                 goto INIT_FAILED;
             }
             val = lua_tointeger( L, -1 );
@@ -692,7 +692,7 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
                 break;
                 
                 default:
-                    errstr = "opt.priority must be context.SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>";
+                    errstr = LAS_ERR_SCANOPT_PRIORITY;
                     goto INIT_FAILED;
             }
             as_scan_set_priority( &lscan->scan, (as_scan_priority)val );
@@ -705,7 +705,7 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
         if( !lua_isnoneornil( L, -1 ) )
         {
             if( lua_type( L, -1 ) != LUA_TNUMBER ){
-                errstr = "opt.percent must be type of number";
+                errstr = LAS_ERR_SCANOPT_PERCENT;
                 goto INIT_FAILED;
             }
             val = lua_tointeger( L, -1 );
@@ -725,7 +725,7 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
         if( !lua_isnoneornil( L, -1 ) )
         {
             if( lua_type( L, -1 ) != LUA_TBOOLEAN ){
-                errstr = "opt.concurrent must be type of boolean";
+                errstr = LAS_ERR_SCANOPT_CONCURRENT;
                 goto INIT_FAILED;
             }
             as_scan_set_concurrent( &lscan->scan, lua_toboolean( L, -1 ) );
@@ -743,7 +743,7 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
                 const int top = lua_gettop( L );
                 
                 if( lua_type( L, -1 ) != LUA_TTABLE ){
-                    errstr = "opt.apply must be type of table";
+                    errstr = LAS_ERR_SCANOPT_APPLY;
                     goto INIT_FAILED;
                 }
                 lua_pushstring( L, "module" );
@@ -755,19 +755,16 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
                 switch( set_apply_args( L, top + 3, apply, top + 1 ) )
                 {
                     // check error
-                    // arg#3 module
                     case LAS_APPLY_EMODULE:
-                        errstr = "opt.appy.module error";
+                        errstr = LAS_ERR_UDF_MODULE;
                         goto INIT_FAILED;
-                    // arg#4 function
                     case LAS_APPLY_EFUNCTION:
-                        errstr = "opt.appy.function error";
+                        errstr = LAS_ERR_UDF_FUNCTION;
                         goto INIT_FAILED;
                     // failed to as_arraylist_init
                     case LAS_APPLY_ESYS:
                         errstr = strerror( errno );
                         goto INIT_FAILED;
-                    // arg#5 arguments for function
                     case LAS_APPLY_EARGS:
                         errstr = lua_tostring( L, -1 );
                         goto INIT_FAILED;

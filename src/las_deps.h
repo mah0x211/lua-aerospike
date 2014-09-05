@@ -88,6 +88,30 @@
 #define LAS_ERR_ORDERBY_LIMIT \
     "number of orderby limit(" STRINGIZE(UINT16_MAX) ") exceeded"
 
+// UDF arguments
+#define LAS_ERR_UDF_MODULE \
+    "UDF module name must be string and length less than " STRINGIZE(AS_UDF_MODULE_MAX_LEN)
+
+#define LAS_ERR_UDF_FUNCTION \
+    "UDF function name must be string and length less than " STRINGIZE(AS_UDF_FUNCTION_MAX_LEN)
+
+#define LAS_ERR_UDF_ARGUMENT \
+    "UDF argument does not support "
+
+
+// scan option errors
+#define LAS_ERR_SCANOPT_PRIORITY \
+    "opt.priority must be aerospike.SCAN_PRIORITY_<AUTO|LOW|MEDIUM|HIGH>"
+
+#define LAS_ERR_SCANOPT_PERCENT \
+    "opt.percent must be 1 to 100(default)"
+
+#define LAS_ERR_SCANOPT_CONCURRENT \
+    "opt.concurrent must be type of boolean"
+
+#define LAS_ERR_SCANOPT_APPLY \
+    "opt.apply must be type of table"
+
 
 static inline const char *LAS_CHK_LBINNAME( lua_State *L, int idx, size_t *len )
 {
