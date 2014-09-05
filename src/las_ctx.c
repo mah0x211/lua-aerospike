@@ -348,7 +348,7 @@ static int operate_lua( lua_State *L )
 
 typedef struct {
     const char *module;
-    const char *function;
+    const char *func;
     as_arraylist args;
 } las_apply_args_t;
 
@@ -377,7 +377,7 @@ static int set_apply_args( lua_State *L, const int argc,
     }
     // arg#4 function
     else if( lua_type( L, function_idx ) != LUA_TSTRING ||
-             !( apply->function = lua_tolstring( L, function_idx, &len ) ) ||
+             !( apply->func = lua_tolstring( L, function_idx, &len ) ) ||
              len > AS_UDF_FUNCTION_MAX_LEN ){
         return LAS_APPLY_EFUNCTION;
     }
@@ -473,7 +473,7 @@ static int apply_lua( lua_State *L )
     }
     
     switch( aerospike_key_apply( lkey.as, &err, lkey.policy, lkey.key,
-                                 apply.module, apply.function,
+                                 apply.module, apply.func,
                                  (as_list*)&apply.args, &res ) ){
         case AEROSPIKE_OK:
             if( !lstate_asval2lua( L, res ) ){
@@ -773,7 +773,7 @@ static int las_scan_init( lua_State *L, las_scan_t *lscan,
                         goto INIT_FAILED;
                 }
                 
-                as_scan_apply_each( &lscan->scan, apply->module, apply->function,
+                as_scan_apply_each( &lscan->scan, apply->module, apply->func,
                                     (as_list*)&apply->args );
                 lua_settop( L, top );
             }
@@ -1185,7 +1185,7 @@ static int query_lua( lua_State *L )
                 return 2;
         }
         
-        as_query_apply( qry, apply.module, apply.function,
+        as_query_apply( qry, apply.module, apply.func,
                         (const as_list*)&apply.args );
     }
     
