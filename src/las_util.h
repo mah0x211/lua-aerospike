@@ -201,7 +201,7 @@ static inline void lstate_definemt( lua_State *L, const char *tname,
     lua_pop( L, 1 );
 }
 
-
+#define LUA_TTABLE_EMPTY    0x0
 #define LUA_TTABLE_LIST     0x1
 #define LUA_TTABLE_HASH     0x2
 #define LUA_TTABLE_HASHLIST 0x3
@@ -213,7 +213,7 @@ static inline void lstate_definemt( lua_State *L, const char *tname,
 static inline int lstate_tablelen( lua_State *L, size_t *len )
 {
     size_t nitem = 0;
-    int type = 0;
+    int type = LUA_TTABLE_EMPTY;
     
     // push table
     lua_pushnil( L );

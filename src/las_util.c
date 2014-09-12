@@ -235,7 +235,7 @@ as_val *lstate_tbl2asval( lua_State *L )
         
         default:
             lua_pushboolean( L, 0 );
-            lua_pushstring( L, "should not be included both of array and hash" );
+            lua_pushliteral( L, "should not be included both of array and hash" );
             return NULL;
     }
 }
@@ -330,11 +330,13 @@ as_record *lstate_tbl2asrec( lua_State *L )
 static int set_tbl2asqry_orderby( lua_State *L, as_query *qry )
 {
     size_t len = 0;
-    
-    if( !lstate_getfield( L, "orderby", LUA_TTABLE ) ){
+    int type = 0;
+
+    if( !lstate_getfield( L, "orderby", LUA_TTABLE ) ||
+        ( type = lstate_tablelen( L, &len ) ) == LUA_TTABLE_EMPTY ){
         return 0;
     }
-    else if( lstate_tablelen( L, &len ) != LUA_TTABLE_HASH ){
+    else if( type != LUA_TTABLE_HASH ){
         lua_pushnil( L );
         lua_pushliteral( L, "orderby field must be hash table" );
     }
@@ -412,11 +414,13 @@ static int set_tbl2asqry_where_range( lua_State *L, as_query *qry,
 static int set_tbl2asqry_where( lua_State *L, as_query *qry )
 {
     size_t len = 0;
-    
-    if( !lstate_getfield( L, "where", LUA_TTABLE ) ){
+    int type = 0;
+
+    if( !lstate_getfield( L, "where", LUA_TTABLE ) ||
+        ( type = lstate_tablelen( L, &len ) ) == LUA_TTABLE_EMPTY ){
         return 0;
     }
-    else if( lstate_tablelen( L, &len ) != LUA_TTABLE_HASH ){
+    else if( type != LUA_TTABLE_HASH ){
         lua_pushnil( L );
         lua_pushliteral( L, "where field must be hash table" );
     }
@@ -476,11 +480,13 @@ static int set_tbl2asqry_where( lua_State *L, as_query *qry )
 static int set_tbl2asqry_select( lua_State *L, as_query *qry )
 {
     size_t len = 0;
-    
-    if( !lstate_getfield( L, "select", LUA_TTABLE ) ){
+    int type = 0;
+
+    if( !lstate_getfield( L, "select", LUA_TTABLE ) ||
+        ( type = lstate_tablelen( L, &len ) ) == LUA_TTABLE_EMPTY ){
         return 0;
     }
-    else if( lstate_tablelen( L, &len ) != LUA_TTABLE_LIST ){
+    else if( type != LUA_TTABLE_LIST ){
         lua_pushnil( L );
         lua_pushliteral( L, "select field must be array table" );
     }
