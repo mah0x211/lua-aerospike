@@ -125,7 +125,9 @@ static as_val *set_tbl2asmap( lua_State *L, const uint32_t len )
                         as_map_destroy( map );
                         return NULL;
                     }
-                    rc = as_stringmap_set( map, name, val );
+                    else if( (uintptr_t)val != (uintptr_t)&as_nil ){
+                        rc = as_stringmap_set( map, name, val );
+                    }
                 break;
                 
                 // unsupported data type
@@ -183,7 +185,9 @@ static as_val *set_tbl2asarr( lua_State *L, const uint32_t len )
                         as_arraylist_destroy( list );
                         return NULL;
                     }
-                    rc = as_arraylist_set( list, idx, val );
+                    else if( (uintptr_t)val != (uintptr_t)&as_nil ){
+                        rc = as_arraylist_set( list, idx, val );
+                    }
                 break;
                 
                 // unsupported data type
@@ -232,7 +236,9 @@ as_val *lstate_tbl2asval( lua_State *L )
         case LUA_TTABLE_LIST:
             return set_tbl2asarr( L, (uint32_t)len );
         break;
-        
+        case LUA_TTABLE_EMPTY:
+            return (as_val*)&as_nil;
+
         default:
             lua_pushboolean( L, 0 );
             lua_pushliteral( L, "should not be included both of array and hash" );
@@ -300,7 +306,12 @@ as_record *lstate_tbl2asrec( lua_State *L )
                     as_record_destroy( rec );
                     return NULL;
                 }
-                rv = as_record_set( rec, name, bin );
+                else if( (uintptr_t)bin != (uintptr_t)&as_nil ){
+                    rv = as_record_set( rec, name, bin );
+                }
+                else {
+                    rv = as_record_set_nil( rec, name );
+                }
             break;
             
             default:
