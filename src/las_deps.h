@@ -225,14 +225,7 @@ static inline void LAS_SET_ASERROR( as_error *err, as_status rc )
         /***************************************************************************
          *	CLIENT API USAGE
          **************************************************************************/
-
-        /**
-         *	Generic client API usage error.
-         */
-        case AEROSPIKE_ERR_CLIENT:
-            LAS_SET_ASERR( err, AEROSPIKE_ERR_CLIENT );
-        break;
-
+         
         /**
          *	Invalid client API parameter.
          */
@@ -260,14 +253,6 @@ static inline void LAS_SET_ASERROR( as_error *err, as_status rc )
          */
         case AEROSPIKE_ERR_TIMEOUT:
             LAS_SET_ASERR( err, AEROSPIKE_ERR_TIMEOUT );
-        break;
-
-        /**
-         *	Request randomly dropped by client for throttling.
-         *	@warning	Not yet supported.
-         */
-        case AEROSPIKE_ERR_THROTTLED:
-            LAS_SET_ASERR( err, AEROSPIKE_ERR_THROTTLED );
         break;
 
         /***************************************************************************
@@ -330,13 +315,6 @@ static inline void LAS_SET_ASERROR( as_error *err, as_status rc )
         /***************************************************************************
          *	RECORD-SPECIFIC
          **************************************************************************/
-
-        /**
-         *	Generic record error.
-         */
-        case AEROSPIKE_ERR_RECORD:
-            LAS_SET_ASERR( err, AEROSPIKE_ERR_RECORD );
-        break;
 
         /**
          *	Too may concurrent requests for one record - a "hot-key" situation.
@@ -405,13 +383,6 @@ static inline void LAS_SET_ASERROR( as_error *err, as_status rc )
         /***************************************************************************
          *	SCAN OPERATIONS
          **************************************************************************/
-
-        /**
-         *	Generic scan error.
-         */
-        case AEROSPIKE_ERR_SCAN:
-            LAS_SET_ASERR( err, AEROSPIKE_ERR_SCAN );
-        break;
 
         /**
          *	Scan aborted by user.
