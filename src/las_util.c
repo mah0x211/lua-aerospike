@@ -417,7 +417,7 @@ static int set_tbl2asqry_where_range( lua_State *L, as_query *qry,
         lua_pop( L, 1 );
     }
     
-    as_query_where( qry, bin, integer_range( range[0], range[1] ) );
+    as_query_where( qry, bin, as_integer_range( range[0], range[1] ) );
     
     return 0;
 }
@@ -458,11 +458,11 @@ static int set_tbl2asqry_where( lua_State *L, as_query *qry )
             {
                 case LUA_TNUMBER:
                     as_query_where( qry, bin,
-                                    integer_equals( lua_tointeger( L, -1 ) ) );
+                                    as_integer_equals( lua_tointeger( L, -1 ) ) );
                 break;
                 case LUA_TSTRING:
                     as_query_where( qry, bin,
-                                    string_equals( lua_tostring( L, -1 ) ) );
+                                    as_string_equals( lua_tostring( L, -1 ) ) );
                 break;
                 case LUA_TTABLE:
                     if( set_tbl2asqry_where_range( L, qry, bin ) != 0 ){
